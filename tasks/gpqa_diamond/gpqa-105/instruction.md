@@ -1,0 +1,3 @@
+The reaction between cyclohexanone and piperidine can result in the formation of a cyclic imine, also known as a Schiff base. This type of reaction is a classic example of imine formation, which involves the condensation of a ketone (cyclohexanone in this case) with a primary amine (piperidine) in the presence of an acid catalyst.
+What will be the favorable acid used (A) and the final product (B) of the following reaction?
+Cyclohexanone + piperidine + (A, acrylaldehyde, H3O+) ---> B

@@ -1,0 +1,1 @@
+Calculate the enthalpy of neutralization when 500 mL 0.2 M HCl, 300 mL 0.3 M H2SO4 and 200 mL 0.5 M Ba(OH)2 are mixed.

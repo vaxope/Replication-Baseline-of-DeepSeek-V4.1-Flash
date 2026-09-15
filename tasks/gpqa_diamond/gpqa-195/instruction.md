@@ -1,0 +1,1 @@
+ Consider a 1-dimensional relativistic harmonic oscillator with mass $m$ and maximum amplitude $A$ obeying Hook's law ($F=-kx$). What is the maximum speed  $v_max$ of the mass? The speed of light is $c$.

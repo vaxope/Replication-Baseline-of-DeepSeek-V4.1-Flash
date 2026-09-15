@@ -1,0 +1,1 @@
+You have prepared a di-substituted 6-membered aromatic ring compound containing 8 carbon atoms in total. Peaks in the FTIR spectrum of this compound indicate the presence of a carbonyl group as well as an aromatic-halogen bond. Identify the correct 1H NMR data for this compound. 

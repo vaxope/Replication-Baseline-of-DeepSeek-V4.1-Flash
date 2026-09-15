@@ -1,0 +1,1 @@
+Which sequence of reactions from the following options would lead to the high-yield synthesis of 2-(tert-butyl)-1-ethoxy-3-nitrobenzene, beginning with benzene?

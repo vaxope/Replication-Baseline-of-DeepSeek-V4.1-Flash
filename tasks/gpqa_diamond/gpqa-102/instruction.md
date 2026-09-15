@@ -1,0 +1,1 @@
+Which sequence of reactions from the following options would lead to the high-yield synthesis of 1-(3-bromo-5-nitrophenyl)ethan-1-one, beginning with benzene?

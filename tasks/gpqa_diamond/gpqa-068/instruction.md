@@ -1,0 +1,1 @@
+In the CERN Bubble Chamber a decay occurs, $X^{0}\rightarrow Y^{+}Z^{-}$ in \tau_{0}=8\times10^{-16}s, i.e. the proper lifetime of X^{0}. What minimum resolution is needed to observe at least 30% of the decays? Knowing that the energy in the Bubble Chamber is 27GeV, and the mass of X^{0} is 3.41GeV.

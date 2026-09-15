@@ -1,0 +1,1 @@
+Let us assume stars are uniformly distributed in the sky. In this scenario, how the number of stars per unit range of parallax (plx) changes with plx?

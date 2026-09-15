@@ -1,0 +1,1 @@
+If a charge q is placed d distance away from the center of a grounded conducting sphere of radius R. Calculate the net potential energy of this system.

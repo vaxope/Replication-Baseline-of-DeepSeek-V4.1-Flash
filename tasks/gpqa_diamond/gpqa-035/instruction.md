@@ -1,0 +1,3 @@
+Observations of structures located at a distance of about 2.1 gigaparsecs (2.1 Gpc) are being carried out. The detected absorption line energy equivalent is about 3.9 micro electron volts (3.9 * 10^-6 eV).
+
+What is most likely to be observed with this absorption line in the Milky Way?

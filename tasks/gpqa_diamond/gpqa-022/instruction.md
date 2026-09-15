@@ -1,0 +1,1 @@
+In an experiment, a researcher reacted ((2,2-dimethylbut-3-en-1-yl)oxy)benzene with hydrogen bromide. After some time, they checked the progress of the reaction using TLC. They found that the reactant spot had diminished, and two new spots were formed. Which of the following could be the structures of the products?

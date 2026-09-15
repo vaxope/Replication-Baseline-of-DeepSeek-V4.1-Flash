@@ -1,0 +1,1 @@
+Two astronauts of masses 2m and 3m travel at relativistic speeds of 0.6 c and 0.5 c, respectively, in the positive x-direction. Here, c is the speed of light. What will be the relative speed and the total energy of the system?

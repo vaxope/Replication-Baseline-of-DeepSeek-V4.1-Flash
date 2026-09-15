@@ -1,0 +1,1 @@
+Which of the following physical theories never requires regularization at high energies?
