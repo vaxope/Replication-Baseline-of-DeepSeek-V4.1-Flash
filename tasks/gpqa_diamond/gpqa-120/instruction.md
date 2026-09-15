@@ -1,1 +1,0 @@
-When saturated epoxides are reacted with organocuprates, the alkyl group of the reagent is always introduced at less hindered carbon of the epoxide ring. In the disubstituted epoxides, inversion of configuration occurs at a carbon to which Nu is added. Identify the product when (1R,3R,4R,6S)-1,3,4-trimethyl-7-oxabicyclo [4.1.0] heptane is reacted with Me2CuLi:

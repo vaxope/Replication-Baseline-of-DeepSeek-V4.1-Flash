@@ -1,2 +1,0 @@
-Consider a system of three spins S1, S2 and S3. Each of which can take spin +1 and -1. The energy of the system is given by, E= -J[ S1S2 +S1S3+S2S3 ].
-Find the partition function Z of the system. (\beta = 1/kT , k= boltzmann constant and T= temperature)

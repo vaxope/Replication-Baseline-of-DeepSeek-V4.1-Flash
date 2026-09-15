@@ -1,1 +1,0 @@
-1-bromobenzene-2-d is treated with NaNH2 in condensed ammonia solvent. How many possible organic products are there in this reaction?

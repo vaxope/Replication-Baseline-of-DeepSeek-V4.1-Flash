@@ -1,1 +1,0 @@
-Large clouds of neutral hydrogen in deep space absorb the light from background quasars at Lyman alpha wavelength ~1216 Angstrom. Estimate the lower limit on the redshift of this objects such that they can be detected with optical ground-based telescopes? 

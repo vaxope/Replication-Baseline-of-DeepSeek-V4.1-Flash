@@ -1,4 +1,0 @@
-Dienes are organic compounds with two adjacent double bonds in their structure, and they exhibit unique reactivity due to their conjugated pi-electron system. They play a significant role in organic chemistry and are involved in various chemical reactions and natural processes.
-Among the given options which one is the possible reactant (A) for the given reaction also mention the correct sequence of the dienes according to their reactivity ( most reactive to least reactive) B.
-Cyclohexene + A ---> 8,8-diiodobicyclo[4.2.0]octan-7-one
-(B) 1. 2,3-dimethylbuta-1,3-diene, 2. (2E,4E)-hexa-2,4-diene, 3. cyclopenta-1,3-diene, 4. (2Z,4Z)-hexa-2,4-diene

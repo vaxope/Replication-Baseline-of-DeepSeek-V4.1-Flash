@@ -1,1 +1,0 @@
-The angular size of the event horizon of a supermassive black hole in the centre of a galaxy at a distance of d=10^10 parsecs is measured to be θ=10^-17 degrees. Find the order of magnitude of the entropy of the blackhole.

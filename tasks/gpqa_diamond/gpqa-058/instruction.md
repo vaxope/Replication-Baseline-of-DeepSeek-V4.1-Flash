@@ -1,1 +1,0 @@
-Determine the pH of the solution of 500 mL of 0.1 M CH3COOH, 400 mL of 0.2 M HCl, and 300 mL of 0.3 M Ba(OH)2.

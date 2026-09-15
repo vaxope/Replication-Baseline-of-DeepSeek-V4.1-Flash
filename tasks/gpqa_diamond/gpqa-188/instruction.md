@@ -1,1 +1,0 @@
-Which of the following (effective) particles is not associated with a spontaneously-broken symmetry?

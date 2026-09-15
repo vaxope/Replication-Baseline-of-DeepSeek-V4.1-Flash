@@ -1,1 +1,0 @@
-The |3,0,0\rangle state in the standard notation |n,l,m\rangle of the H -atom in the non-relativistic theory decays to the state |1,0,0\rangle via two dipole transition. The transition route and the corresponding probability are (use latex),

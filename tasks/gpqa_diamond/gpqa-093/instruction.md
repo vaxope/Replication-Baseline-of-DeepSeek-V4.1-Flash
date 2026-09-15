@@ -1,1 +1,0 @@
-Identify the starting material(s) required to synthesize methyl 2-propyl-1,2,4a,5,6,7,8,8a-octahydronaphthalene-1-carboxylate.

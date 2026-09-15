@@ -1,1 +1,0 @@
-While solving higher dimensional heat equations subject to suitable initial and boundary conditions through higher order finite difference approximations and parallel splitting, the matrix exponential function is approximated by a fractional approximation. The key factor of converting sequential algorithm into parallel algorithm is

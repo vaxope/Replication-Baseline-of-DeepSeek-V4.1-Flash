@@ -1,1 +1,0 @@
-X is a meson resonance. What is the mean decay distance? Knowing that the production energy is $E_{X}=8GeV$, the mass $m_{X}=1.2GeV$, and the width $\Gamma_{X}=320MeV$.
