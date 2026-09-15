@@ -37,13 +37,45 @@ Then mark the task complete.
 """
 
 def build_task_toml(task_name):
-    pass
+    return f"""schema_version = "1.4"
+    
+[task]
+name = "gpqa-diamong/{task_name}"
+
+version = "1.0.0"
+authors = []
+keywords = []
+
+[metadata]
+author_name = "Replication Baseline"
+difficulty = "hard"
+category = "science"
+tags = ["gpqa", "multiple-choice"]
+
+[verifier]
+timeout_sec = 60.0
+
+[agent]
+timeout_sec = 300.0
+
+[environment]
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[solution.env]
+"""
 
 def build_dockerfile():
-    pass
+    return "FROM ubuntu:24.04\n\nWORKDIR /app\n"
 
 def build_solve_sh(correct_letter):
-    pass
+    return ""
 
 def build_test_sh():
     pass
