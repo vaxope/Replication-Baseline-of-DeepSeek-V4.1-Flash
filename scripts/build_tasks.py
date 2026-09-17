@@ -58,7 +58,7 @@ tags = ["gpqa", "multiple-choice"]
 timeout_sec = 60.0
 
 [agent]
-timeout_sec = 300.0
+timeout_sec = 900.0
 
 [environment]
 build_timeout_sec = 600.0
