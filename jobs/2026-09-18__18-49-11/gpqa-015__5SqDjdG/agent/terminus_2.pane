@@ -1,0 +1,19 @@
+[?2004hroot@e9d33e225b47:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@e9d33e225b47:/app# clear
+[?2004l[H[J[3J[?2004hroot@e9d33e225b47:/app# python3 -c "import rdkit; print('rdkit available')" 2>/dev/null || echo 'rdkit not available'
+[?2004lrdkit not available
+[?2004hroot@e9d33e225b47:/app# command -v obabel || command -v babel || echo 'no openbabel'
+[?2004lno openbabel
+[?2004hroot@e9d33e225b47:/app# python3 - <<'PY'
+[?2004l[?2004h> import importlib.util
+[?2004l[?2004h> for m in ['openbabel','rdkit','networkx','ase']:
+[?2004l[?2004h>     print(m, bool(importlib.util.find_spec(m)))
+[?2004l[?2004h> PY
+[?2004lopenbabel False
+rdkit False
+networkx False
+ase False
+[?2004hroot@e9d33e225b47:/app# printf C > /app/answer.txt
+[?2004l[?2004hroot@e9d33e225b47:/app# 

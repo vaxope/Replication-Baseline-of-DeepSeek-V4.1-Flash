@@ -1,0 +1,428 @@
+[?2004hroot@70fa95b93d61:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@70fa95b93d61:/app# clear
+[?2004l[H[J[3J[?2004hroot@70fa95b93d61:/app# python3 -c "import rdkit; print('rdkit available')"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'rdkit'
+[?2004hroot@70fa95b93d61:/app# ls -la /app
+[?2004ltotal 8
+drwxr-xr-x 2 root root 4096 Sep 18 21:24 [0m[01;34m.[0m
+drwxr-xr-x 1 root root 4096 Sep 19 00:19 [01;34m..[0m
+[?2004hroot@70fa95b93d61:/app# python3 - <<'PY'
+[?2004l[?2004h> smiles = 'O=C(OC)[C@H]1[C@@H](C=C2)[C@@H]3[C@@H]([C@@H]4[C@H]3[C@@H]5C=C[C@H]4C5)[C@@H]2[C@H]1C(OC)=O'
+[?2004l[?2004h> # Basic parser ignoring aromaticity and charges, enough for this SMILES
+[?2004l[?2004h> atoms = []
+[?2004l[?2004h> adj = {}
+[?2004l[?2004h> ring = {}
+[?2004l[?2004h> stack = []
+[?2004l[?2004h> prev = None
+[?2004l[?2004h> bond_order = 1
+[?2004l[?2004h> for i,ch in enumerate(smiles):
+[?2004l[?2004h>     if ch == '[':
+[?2004l[?2004h>         j = smiles.index(']', i)
+[?2004l[?2004h>         token = smiles[i+1:j]
+[?2004l[?2004h>         el = ''.join(c for c in token if c.isalpha())
+[?2004l[?2004h>         if el == 'H': el = 'H'
+[?2004l[?2004h>         atoms.append(el)
+[?2004l[?2004h>         idx = len(atoms)-1
+[?2004l[?2004h>         adj.setdefault(idx,[])
+[?2004l[?2004h>         if prev is not None:
+[?2004l[?2004h>             adj[prev].append((idx,bond_order)); adj[idx].append((prev,bond_order)); bond_order=1
+[?2004l[?2004h>         prev = idx
+[?2004l[?2004h>         i = j
+[?2004l[?2004h>     elif ch == '(':
+[?2004l[?2004h>         stack.append(prev)
+[?2004l[?2004h>     elif ch == ')':
+[?2004l[?2004h>         prev = stack.pop()
+[?2004l[?2004h>     elif ch == '=':
+[?2004l[?2004h>         bond_order = 2
+[?2004l[?2004h>     elif ch == '#':
+[?2004l[?2004h>         bond_order = 3
+[?2004l[?2004h>     elif ch.isdigit():
+[?2004l[?2004h>         n = int(ch)
+[?2004l[?2004h>         if n in ring:
+[?2004l[?2004h>             other = ring.pop(n)
+[?2004l[?2004h>             adj[prev].append((other,bond_order)); adj[other].append((prev,bond_order)); bond_order=1
+[?2004l[?2004h>         else:
+[?2004l[?2004h>             ring[n] = prev
+[?2004l[?2004h>     elif ch.isalpha():
+[?2004l[?2004h>         # element symbol; handle two-letter Cl/Br not needed
+[?2004l[?2004h>         atoms.append(ch)
+[?2004l[?2004h>         idx = len(atoms)-1
+[?2004l[?2004h>         adj.setdefault(idx,[])
+[?2004l[?2004h>         if prev is not None:
+[?2004l[?2004h>             adj[prev].append((idx,bond_order)); adj[idx].append((prev,bond_order)); bond_order=1
+[?2004l[?2004h>         prev = idx
+[?2004l[?2004h> 
+[?2004l[?2004h> print('atoms', len(atoms))
+[?2004l[?2004h> for i,a in enumerate(atoms):
+[?2004l[?2004h>     neigh = ' '.join(f'{j}{bond*"" if bond==1 else "=" if bond==2 else "#"}' for j,bond in adj.get(i,[]))
+[?2004l[?2004h>     print(i,a,':',neigh)
+[?2004l[?2004h> PY
+[?2004latoms 43
+0 O : 1=
+1 C : 0= 2 4
+2 O : 1 3
+3 C : 2
+4 CH : 1 5
+5 C : 4 6
+6 H : 5 7 38
+7 CH : 6 8
+8 C : 7 9
+9 H : 8 10 12
+10 C : 9 11=
+11 C : 10= 35
+12 CH : 9 13
+13 C : 12 14
+14 H : 13 15 23
+15 CH : 14 16
+16 C : 15 17
+17 H : 16 18 33
+18 CH : 17 19
+19 C : 18 20
+20 H : 19 21 31
+21 CH : 20 22
+22 C : 21 23
+23 H : 22 14 24
+24 CH : 23 25
+25 C : 24 26
+26 H : 25 27 32
+27 C : 26 28=
+28 C : 27= 29
+29 CH : 28 30
+30 C : 29 31
+31 H : 30 20 32
+32 C : 31 26
+33 CH : 17 34
+34 C : 33 35
+35 H : 34 11 36
+36 CH : 35 37
+37 C : 36 38
+38 H : 37 6 39
+39 C : 38 40 42=
+40 O : 39 41
+41 C : 40
+42 O : 39=
+[?2004hroot@70fa95b93d61:/app# which obabel || true
+[?2004l[?2004hroot@70fa95b93d61:/app# python3 -c "import openbabel; print('openbabel available')" 2>/dev/null || true
+[?2004l[?2004hroot@70fa95b93d61:/app# pip list 2>/dev/null | head -50
+[?2004l[?2004hroot@70fa95b93d61:/app# python3 - <<'PY'
+[?2004l[?2004h> import re
+[?2004l[?2004h> 
+[?2004l[?2004h> def parse(smiles, name):
+[?2004l[?2004h>     atoms=[]  # (symbol, chirality)
+[?2004l[?2004h>     adj={}
+[?2004l[?2004h>     ring={}
+[?2004l[?2004h>     branch_stack=[]
+[?2004l[?2004h>     prev=None
+[?2004l[?2004h>     bond=1
+[?2004l[?2004h>     i=0
+[?2004l[?2004h>     while i < len(smiles):
+[?2004l[?2004h>         ch=smiles[i]
+[?2004l[?2004h>         if ch == '[':
+[?2004l[?2004h>             j=smiles.index(']', i)
+[?2004l[?2004h>             tok=smiles[i+1:j]
+[?2004l[?2004h>             # element is first alpha characters (C, N, O, etc.)
+[?2004l[?2004h>             m=re.match(r'([A-Z][a-z]?|[a-z])', tok)
+[?2004l[?2004h>             el=m.group(1) if m else '?'
+[?2004l[?2004h>             chir=''
+[?2004l[?2004h>             if '@' in tok:
+[?2004l[?2004h>                 chir='@@' if '@@' in tok else '@'
+[?2004l[?2004h>             idx=len(atoms)
+[?2004l[?2004h>             atoms.append((el,chir,tok))
+[?2004l[?2004h>             adj[idx]=[]
+[?2004l[?2004h>             if prev is not None:
+[?2004l[?2004h>                 adj[prev].append((idx,bond)); adj[idx].append((prev,bond)); bond=1
+[?2004l[?2004h>             prev=idx
+[?2004l[?2004h>             i=j+1
+[?2004l[?2004h>             continue
+[?2004l[?2004h>         elif ch == '(':
+[?2004l[?2004h>             branch_stack.append(prev)
+[?2004l[?2004h>         elif ch == ')':
+[?2004l[?2004h>             prev=branch_stack.pop()
+[?2004l[?2004h>         elif ch == '=':
+[?2004l[?2004h>             bond=2
+[?2004l[?2004h>         elif ch == '#':
+[?2004l[?2004h>             bond=3
+[?2004l[?2004h>         elif ch.isdigit():
+[?2004l[?2004h>             n=int(ch)
+[?2004l[?2004h>             if n in ring:
+[?2004l[?2004h>                 other=ring.pop(n)
+[?2004l[?2004h>                 adj[prev].append((other,bond)); adj[other].append((prev,bond)); bond=1
+[?2004l[?2004h>             else:
+[?2004l[?2004h>                 ring[n]=prev
+[?2004l[?2004h>         elif ch.isalpha():
+[?2004l[?2004h>             # organic subset atom, may be Cl/Br
+[?2004l[?2004h>             if i+1 < len(smiles) and smiles[i:i+2] in ('Cl','Br'):
+[?2004l[?2004h>                 el=smiles[i:i+2]; i+=1
+[?2004l[?2004h>             else:
+[?2004l[?2004h>                 el=ch
+[?2004l[?2004h>             idx=len(atoms)
+[?2004l[?2004h>             atoms.append((el,'',''))
+[?2004l[?2004h>             adj[idx]=[]
+[?2004l[?2004h>             if prev is not None:
+[?2004l[?2004h>                 adj[prev].append((idx,bond)); adj[idx].append((prev,bond)); bond=1
+[?2004l[?2004h>             prev=idx
+[?2004l[?2004h>         i+=1
+[?2004l[?2004h>     print('====', name, 'heavy atoms', len(atoms))
+[?2004l[?2004h>     for idx,(el,chir,tok) in enumerate(atoms):
+[?2004l[?2004h>         if chir:
+[?2004l[?2004h>             neigh=' '.join(f'{j}{"=" if b==2 else "#" if b==3 else ""}' for j,b in adj[idx])
+[?2004l[?2004h>             print(f'{idx:2d} {el:2s} {chir:2s} : {neigh}')
+[?2004l[?2004h>     return atoms,adj
+[?2004l[?2004h> 
+[?2004l[?2004h> smis={
+[?2004l[?2004h> 'A':'O=C(OC)[C@H]1[C@@H](C=C2)[C@@H]3[C@@H]([C@@H]4[C@H]3[C@@H]5C=C[C@H]4C5)[C@@H]2[C@H]1C(OC)=O',
+[?2004l[?2004h> 'B':'O=C(OC)[C@@H]1[C@@H](C=C2)[C@@H]3[C@@H]([C@@H]4[C@H]3[C@H]5C=C[C@@H]4C5)[C@@H]2[C@H]1C(OC)=O',
+[?2004l[?2004h> 'C':'O=C(OC)[C@@H]1[C@H](C=C2)[C@@H]3[C@@H]([C@H]4[C@@H]3[C@@H]5C=C[C@H]4C5)[C@H]2[C@@H]1C(OC)=O',
+[?2004l[?2004h> 'D':'O=C(OC)[C@@H]1[C@@H](C=C2)[C@@H]3[C@@H]([C@H]4[C@@H]3[C@H]5C=C[C@@H]4C5)[C@@H]2[C@@H]1C(OC)=O'
+[?2004l[?2004h> }
+[?2004l[?2004h> for k in 'ABCD':
+[?2004l[?2004h>     parse(smis[k], k)
+[?2004l[?2004h> PY
+[?2004l==== A heavy atoms 23
+ 4 C  @  : 1 5 18
+ 5 C  @@ : 4 6 8
+ 8 C  @@ : 5 9 11
+ 9 C  @@ : 8 10 17
+10 C  @@ : 9 11 15
+11 C  @  : 10 8 12
+12 C  @@ : 11 13 16
+15 C  @  : 14 10 16
+17 C  @@ : 9 7 18
+18 C  @  : 17 4 19
+==== B heavy atoms 23
+ 4 C  @@ : 1 5 18
+ 5 C  @@ : 4 6 8
+ 8 C  @@ : 5 9 11
+ 9 C  @@ : 8 10 17
+10 C  @@ : 9 11 15
+11 C  @  : 10 8 12
+12 C  @  : 11 13 16
+15 C  @@ : 14 10 16
+17 C  @@ : 9 7 18
+18 C  @  : 17 4 19
+==== C heavy atoms 23
+ 4 C  @@ : 1 5 18
+ 5 C  @  : 4 6 8
+ 8 C  @@ : 5 9 11
+ 9 C  @@ : 8 10 17
+10 C  @  : 9 11 15
+11 C  @@ : 10 8 12
+12 C  @@ : 11 13 16
+15 C  @  : 14 10 16
+17 C  @  : 9 7 18
+18 C  @@ : 17 4 19
+==== D heavy atoms 23
+ 4 C  @@ : 1 5 18
+ 5 C  @@ : 4 6 8
+ 8 C  @@ : 5 9 11
+ 9 C  @@ : 8 10 17
+10 C  @  : 9 11 15
+11 C  @@ : 10 8 12
+12 C  @  : 11 13 16
+15 C  @@ : 14 10 16
+17 C  @@ : 9 7 18
+18 C  @@ : 17 4 19
+[?2004hroot@70fa95b93d61:/app# python3 - <<'PY'
+[?2004l[?2004h> import re
+[?2004l[?2004h> s='O=C(OC)[C@H]1[C@@H](C=C2)[C@@H]3[C@@H]([C@@H]4[C@H]3[C@@H]5C=C[C@H]4C5)[C@@H]2[C@H]1C(OC)=O'
+[?2004l[?2004h> atoms=[]; adj={}; ring={}; stack=[]; prev=None; bond=1; i=0
+[?2004l[?2004h> while i<len(s):
+[?2004l[?2004h>     ch=s[i]
+[?2004l[?2004h>     if ch=='[':
+[?2004l[?2004h>         j=s.index(']',i); tok=s[i+1:j]; m=re.match(r'([A-Z][a-z]?|[a-z])',tok); el=m.group(1) if m else '?'
+[?2004l[?2004h>         idx=len(atoms); atoms.append((el,tok)); adj[idx]=[]
+[?2004l[?2004h>         if prev is not None: adj[prev].append((idx,bond)); adj[idx].append((prev,bond)); bond=1
+[?2004l[?2004h>         prev=idx; i=j+1; continue
+[?2004l[?2004h>     elif ch=='(' : stack.append(prev)
+[?2004l[?2004h>     elif ch==')': prev=stack.pop()
+[?2004l[?2004h>     elif ch=='=': bond=2
+[?2004l[?2004h>     elif ch=='#': bond=3
+[?2004l[?2004h>     elif ch.isdigit():
+[?2004l[?2004h>         n=int(ch)
+[?2004l[?2004h>         if n in ring:
+[?2004l[?2004h>             o=ring.pop(n); adj[prev].append((o,bond)); adj[o].append((prev,bond)); bond=1
+[?2004l[?2004h>         else: ring[n]=prev
+[?2004l[?2004h>     elif ch.isalpha():
+[?2004l[?2004h>         if i+1<len(s) and s[i:i+2] in ('Cl','Br'): el=s[i:i+2]; i+=1
+[?2004l[?2004h>         else: el=ch
+[?2004l[?2004h>         idx=len(atoms); atoms.append((el,'')); adj[idx]=[]
+[?2004l[?2004h>         if prev is not None: adj[prev].append((idx,bond)); adj[idx].append((prev,bond)); bond=1
+[?2004l[?2004h>         prev=idx
+[?2004l[?2004h>     i+=1
+[?2004l[?2004h> for idx,(el,tok) in enumerate(atoms):
+[?2004l[?2004h>     ns=[]
+[?2004l[?2004h>     for j,b in adj[idx]:
+[?2004l[?2004h>         label={1:'-',2:'=',3:'#'}[b]
+[?2004l[?2004h>         ns.append(f'{j}{label}')
+[?2004l[?2004h>     print(f'{idx:2d} {el:2s} deg{len(adj[idx])}: '+', '.join(ns))
+[?2004l[?2004h> PY
+[?2004l 0 O  deg1: 1=
+ 1 C  deg3: 0=, 2-, 4-
+ 2 O  deg2: 1-, 3-
+ 3 C  deg1: 2-
+ 4 C  deg3: 1-, 5-, 18-
+ 5 C  deg3: 4-, 6-, 8-
+ 6 C  deg2: 5-, 7=
+ 7 C  deg2: 6=, 17-
+ 8 C  deg3: 5-, 9-, 11-
+ 9 C  deg3: 8-, 10-, 17-
+10 C  deg3: 9-, 11-, 15-
+11 C  deg3: 10-, 8-, 12-
+12 C  deg3: 11-, 13-, 16-
+13 C  deg2: 12-, 14=
+14 C  deg2: 13=, 15-
+15 C  deg3: 14-, 10-, 16-
+16 C  deg2: 15-, 12-
+17 C  deg3: 9-, 7-, 18-
+18 C  deg3: 17-, 4-, 19-
+19 C  deg3: 18-, 20-, 22=
+20 O  deg2: 19-, 21-
+21 C  deg1: 20-
+22 O  deg1: 19=
+[?2004hroot@70fa95b93d61:/app# python3 -c "import networkx; print('networkx available', networkx.__version__)"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'networkx'
+[?2004hroot@70fa95b93d61:/app# python3 - <<'PY'
+[?2004l[?2004h> from itertools import combinations
+[?2004l[?2004h> # cage atom indices 4..18
+[?2004l[?2004h> cage=list(range(4,19))
+[?2004l[?2004h> edges=[(4,5),(4,18),(5,6),(5,8),(6,7),(7,17),(8,9),(8,11),(9,10),(9,17),(10,11),(10,15),(11,12),(12,13),(12,16),(13,14),(14,15),(15,16),(17,18)]
+[?2004l[?2004h> assert len(edges)==20
+[?2004l[?2004h> for cut in combinations(range(len(edges)),4):
+[?2004l[?2004h>     adj={i:set() for i in cage}
+[?2004l[?2004h>     for k,(a,b) in enumerate(edges):
+[?2004l[?2004h>         if k not in cut:
+[?2004l[?2004h>             adj[a].add(b); adj[b].add(a)
+[?2004l[?2004h>     seen=set(); comps=[]
+[?2004l[?2004h>     for v in cage:
+[?2004l[?2004h>         if v in seen: continue
+[?2004l[?2004h>         stack=[v]; seen.add(v); comp=[]
+[?2004l[?2004h>         while stack:
+[?2004l[?2004h>             x=stack.pop(); comp.append(x)
+[?2004l[?2004h>             for y in adj[x]:
+[?2004l[?2004h>                 if y not in seen:
+[?2004l[?2004h>                     seen.add(y); stack.append(y)
+[?2004l[?2004h>         comps.append(comp)
+[?2004l[?2004h>     if len(comps)==2 and sorted(map(len,comps))==[5,10]:
+[?2004l[?2004h>         comps=sorted(comps,key=len)
+[?2004l[?2004h>         print('CUT EDGES:', [edges[k] for k in cut])
+[?2004l[?2004h>         print('5-CPD:', sorted(comps[0]))
+[?2004l[?2004h>         print('10-CORE:', sorted(comps[1]))
+[?2004l[?2004h>         print()
+[?2004l[?2004h> PY
+[?2004lTraceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+AssertionError
+[?2004hroot@70fa95b93d61:/app# python3 - <<'PY'
+[?2004l[?2004h> from collections import defaultdict
+[?2004l[?2004h> # cage graph
+[?2004l[?2004h> edges=[(4,5),(4,18),(5,6),(5,8),(6,7),(7,17),(8,9),(8,11),(9,10),(9,17),(10,11),(10,15),(11,12),(12,13),(12,16),(13,14),(14,15),(15,16),(17,18)]
+[?2004l[?2004h> adj=defaultdict(list)
+[?2004l[?2004h> for a,b in edges: adj[a].append(b); adj[b].append(a)
+[?2004l[?2004h> # enumerate simple cycles up to 8, canonicalize
+[?2004l[?2004h> rings=set()
+[?2004l[?2004h> verts=range(4,19)
+[?2004l[?2004h> for s in verts:
+[?2004l[?2004h>     stack=[(s,[s])]
+[?2004l[?2004h>     while stack:
+[?2004l[?2004h>         v,path=stack.pop()
+[?2004l[?2004h>         for w in adj[v]:
+[?2004l[?2004h>             if w==s and len(path)>=4:
+[?2004l[?2004h>                 cyc=tuple(sorted(path))
+[?2004l[?2004h>                 rings.add(cyc)
+[?2004l[?2004h>             elif w not in path and len(path)<8 and w>s:
+[?2004l[?2004h>                 stack.append((w,path+[w]))
+[?2004l[?2004h> for r in sorted(rings,key=lambda x:(len(x),x)):
+[?2004l[?2004h>     # reconstruct cyclic order for readability
+[?2004l[?2004h>     cyc=list(r)
+[?2004l[?2004h>     order=[cyc[0]]
+[?2004l[?2004h>     remaining=set(cyc[1:])
+[?2004l[?2004h>     while remaining:
+[?2004l[?2004h>         last=order[-1]
+[?2004l[?2004h>         nxt=[x for x in remaining if x in adj[last]]
+[?2004l[?2004h>         if not nxt: break
+[?2004l[?2004h>         n=nxt[0]; order.append(n); remaining.remove(n)
+[?2004l[?2004h>     if not remaining:
+[?2004l[?2004h>         print(len(order), order)
+[?2004l[?2004h> PY
+[?2004l4 [8, 9, 10, 11]
+5 [10, 11, 12, 16, 15]
+5 [12, 16, 15, 14, 13]
+6 [4, 5, 6, 7, 17, 18]
+6 [4, 5, 8, 9, 17, 18]
+6 [5, 6, 7, 17, 9, 8]
+6 [10, 11, 12, 13, 14, 15]
+7 [8, 9, 10, 11, 12, 16, 15]
+8 [5, 6, 7, 17, 9, 8, 11, 10]
+8 [8, 9, 10, 11, 12, 13, 14, 15]
+[?2004hroot@70fa95b93d61:/app# python3 - <<'PY'
+[?2004l[?2004h> import re, hashlib
+[?2004l[?2004h> from collections import defaultdict, Counter
+[?2004l[?2004h> s='O=C(OC)[C@H]1[C@@H](C=C2)[C@@H]3[C@@H]([C@@H]4[C@H]3[C@@H]5C=C[C@H]4C5)[C@@H]2[C@H]1C(OC)=O'
+[?2004l[?2004h> # parse
+[?2004l[?2004h> atoms=[]; adj=defaultdict(list); ring={}; stack=[]; prev=None; bond=1; i=0
+[?2004l[?2004h> while i<len(s):
+[?2004l[?2004h>     ch=s[i]
+[?2004l[?2004h>     if ch=='[':
+[?2004l[?2004h>         j=s.index(']',i); tok=s[i+1:j]; m=re.match(r'([A-Z][a-z]?|[a-z])',tok); el=m.group(1) if m else '?'
+[?2004l[?2004h>         idx=len(atoms); atoms.append(el); adj[idx]=[]
+[?2004l[?2004h>         if prev is not None: adj[prev].append((idx,bond)); adj[idx].append((prev,bond)); bond=1
+[?2004l[?2004h>         prev=idx; i=j+1; continue
+[?2004l[?2004h>     elif ch=='(' : stack.append(prev)
+[?2004l[?2004h>     elif ch==')': prev=stack.pop()
+[?2004l[?2004h>     elif ch=='=': bond=2
+[?2004l[?2004h>     elif ch=='#': bond=3
+[?2004l[?2004h>     elif ch.isdigit():
+[?2004l[?2004h>         n=int(ch)
+[?2004l[?2004h>         if n in ring:
+[?2004l[?2004h>             o=ring.pop(n); adj[prev].append((o,bond)); adj[o].append((prev,bond)); bond=1
+[?2004l[?2004h>         else: ring[n]=prev
+[?2004l[?2004h>     elif ch.isalpha():
+[?2004l[?2004h>         if i+1<len(s) and s[i:i+2] in ('Cl','Br'): el=s[i:i+2]; i+=1
+[?2004l[?2004h>         else: el=ch
+[?2004l[?2004h>         idx=len(atoms); atoms.append(el); adj[idx]=[]
+[?2004l[?2004h>         if prev is not None: adj[prev].append((idx,bond)); adj[idx].append((prev,bond)); bond=1
+[?2004l[?2004h>         prev=idx
+[?2004l[?2004h>     i+=1
+[?2004l[?2004h> 
+[?2004l[?2004h> # color refinement
+[?2004l[?2004h> colors=[(atoms[i], len(adj[i]), tuple(sorted(b for _,b in adj[i]))) for i in range(len(atoms))]
+[?2004l[?2004h> for it in range(20):
+[?2004l[?2004h>     new=[]
+[?2004l[?2004h>     for v in range(len(atoms)):
+[?2004l[?2004h>         sig=(colors[v], tuple(sorted((b, colors[w]) for w,b in adj[v])))
+[?2004l[?2004h>         new.append(hashlib.md5(str(sig).encode()).hexdigest())
+[?2004l[?2004h>     # map to compact ints
+[?2004l[?2004h>     comp={}
+[?2004l[?2004h>     cid=[]
+[?2004l[?2004h>     for c in new:
+[?2004l[?2004h>         if c not in comp: comp[c]=len(comp)
+[?2004l[?2004h>         cid.append(comp[c])
+[?2004l[?2004h>     if cid==colors:
+[?2004l[?2004h>         break
+[?2004l[?2004h>     colors=cid
+[?2004l[?2004h> classes=defaultdict(list)
+[?2004l[?2004h> for i,c in enumerate(colors): classes[c].append(i)
+[?2004l[?2004h> print('refinement iterations', it, 'classes', len(classes))
+[?2004l[?2004h> for c,vs in sorted(classes.items(), key=lambda kv: min(kv[1])):
+[?2004l[?2004h>     print(c, vs, [atoms[v] for v in vs])
+[?2004l[?2004h> PY
+[?2004lrefinement iterations 2 classes 12
+0 [0, 22] ['O', 'O']
+1 [1, 19] ['C', 'C']
+2 [2, 20] ['O', 'O']
+3 [3, 21] ['C', 'C']
+4 [4, 18] ['C', 'C']
+5 [5, 17] ['C', 'C']
+6 [6, 7] ['C', 'C']
+7 [8, 9] ['C', 'C']
+8 [10, 11] ['C', 'C']
+9 [12, 15] ['C', 'C']
+10 [13, 14] ['C', 'C']
+11 [16] ['C']
+[?2004hroot@70fa95b93d61:/app# 

@@ -1,0 +1,13 @@
+{"version": 2, "width": 160, "height": 40, "timestamp": 1789774469, "env": {"SHELL": "/bin/bash", "TERM": "tmux-256color"}}
+[0.004785, "o", "\u001b[?2004hroot@14ef4573a039:/app# "]
+[0.933782, "i", "clear\r"]
+[0.93405, "o", "clear\r\n\u001b[?2004l\r"]
+[0.935146, "o", "\u001b[H\u001b[J\u001b[3J"]
+[0.935842, "o", "\u001b[?2004hroot@14ef4573a039:/app# "]
+[63.134099, "i", "python3 -c 'import math; a=0.5; r=math.exp(-2*a*a); n=a*a*(1+r)/(1-r); vx=n+0.5+a*a; vp=n+0.5-a*a; nu=math.sqrt(vx*vp); S=(nu+0.5)*math.log(nu+0.5)-(nu-0.5)*math.log(nu-0.5); print(r,n,vx,vp,nu,S)'\n"]
+[63.134849, "o", "python3 -c 'import math; a=0.5; r=math.exp(-2*a*a); n=a*a*(1+r)/(1-r); vx=n+0.5+a*a; vp=n+0.5-a*a; nu=math.sqrt(vx*vp); S=(nu+0.5)*math.log(nu+0.5)-(nu-0.5)*math.log(nu-0.5); print(r,n,vx,vp,nu,S)'\r\n\u001b[?2004l\r"]
+[63.143569, "o", "0.6065306597126334 1.0207470412683992 1.7707470412683992 1.2707470412683992 1.5000571867520884 1.3863339991383083\r\n"]
+[63.145628, "o", "\u001b[?2004hroot@14ef4573a039:/app# "]
+[66.778091, "i", "echo -n \"A\" > /app/answer.txt\n"]
+[66.778319, "o", "echo -n \"A\" > /app/answer.txt\r\n\u001b[?2004l\r"]
+[66.77881, "o", "\u001b[?2004hroot@14ef4573a039:/app# "]

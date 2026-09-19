@@ -1,0 +1,36 @@
+[?2004hroot@ae548ad799c3:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@ae548ad799c3:/app# clear
+[?2004l[H[J[3J[?2004hroot@ae548ad799c3:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> alpha=1/137.035999
+[?2004l[?2004h> m=0.511
+[?2004l[?2004h> def F(Z,E):
+[?2004l[?2004h>     p=math.sqrt(max(E*E-m*m,0))
+[?2004l[?2004h>     if p==0: return 1.0
+[?2004l[?2004h>     eta=Z*alpha*E/p
+[?2004l[?2004h>     return 2*math.pi*eta/(1-math.exp(-2*math.pi*eta))
+[?2004l[?2004h> def spec(E,Q,Z):
+[?2004l[?2004h>     Ee=Q-E+m
+[?2004l[?2004h>     if Ee<m or E<0 or E>Q: return 0.0
+[?2004l[?2004h>     pe=math.sqrt(Ee*Ee-m*m)
+[?2004l[?2004h>     return pe*Ee*F(Z,Ee)*(Q-E)**2
+[?2004l[?2004h> def integ(Q,Z,a,b,n=20000):
+[?2004l[?2004h>     h=(b-a)/n
+[?2004l[?2004h>     s=spec(a,Q,Z)+spec(b,Q,Z)
+[?2004l[?2004h>     for i in range(1,n):
+[?2004l[?2004h>         s+=(4 if i%2 else 2)*spec(a+i*h,Q,Z)
+[?2004l[?2004h>     return s*h/3
+[?2004l[?2004h> for Q,Z,name,flux in [(1.20,6,'13N',2.78e8),(1.73,7,'15O',2.05e8),(1.74,8,'17F',5.29e6),(15.0,4,'8B',5.46e6)]:
+[?2004l[?2004h>     tot=integ(Q,Z,0,Q,200000)
+[?2004l[?2004h>     b1=integ(Q,Z,0.7,0.8,20000)
+[?2004l[?2004h>     b2=integ(Q,Z,0.8,0.9,20000)
+[?2004l[?2004h>     print(name, 'frac1=%.4g frac2=%.4g flux1=%.4g flux2=%.4g band ratio=%.4g' % (b1/tot,b2/tot,flux*b1/tot,flux*b2/tot,b1/b2))
+[?2004l[?2004h> PY
+[?2004l13N frac1=0.01482 frac2=0.006944 flux1=4.119e+06 flux2=1.93e+06 band ratio=2.134
+15O frac1=0.03603 frac2=0.02509 flux1=7.385e+06 flux2=5.144e+06 band ratio=1.436
+17F frac1=0.03635 frac2=0.02541 flux1=1.923e+05 flux2=1.344e+05 band ratio=1.431
+8B frac1=0.02681 frac2=0.02607 flux1=1.464e+05 flux2=1.424e+05 band ratio=1.028
+[?2004hroot@ae548ad799c3:/app# echo -n "C" > /app/answer.txt
+[?2004l[?2004hroot@ae548ad799c3:/app# 

@@ -1,0 +1,18 @@
+{
+    "job_name": "2026-09-18__18-49-11",
+    "n_concurrent_trials": 5,
+    "retry": {
+        "max_retries": 2
+    },
+    "agents": [
+        {
+            "name": "terminus-2",
+            "model_name": "deepseek/deepseek-flash"
+        }
+    ],
+    "datasets": [
+        {
+            "path": "tasks\\gpqa_diamond"
+        }
+    ]
+}

@@ -1,0 +1,39 @@
+[?2004hroot@d12edfaa61ae:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@d12edfaa61ae:/app# clear
+[?2004l[H[J[3J[?2004hroot@d12edfaa61ae:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> m = 0.511  # MeV
+[?2004l[?2004h> sources = [('13N', 1.199, 2.96e8), ('15O', 1.732, 2.21e8), ('17F', 1.732, 5.52e6)]
+[?2004l[?2004h> 
+[?2004l[?2004h> def shape(E, Tmax):
+[?2004l[?2004h>     Q = Tmax + m
+[?2004l[?2004h>     Ee = Q - E
+[?2004l[?2004h>     pc = math.sqrt(max(Ee*Ee - m*m, 0.0))
+[?2004l[?2004h>     return pc * Ee * E*E
+[?2004l[?2004h> 
+[?2004l[?2004h> for name, Tmax, flux in sources:
+[?2004l[?2004h>     N = 200000
+[?2004l[?2004h>     h = Tmax/N
+[?2004l[?2004h>     total = b1 = b2 = 0.0
+[?2004l[?2004h>     for i in range(N):
+[?2004l[?2004h>         E = (i + 0.5)*h
+[?2004l[?2004h>         v = shape(E, Tmax)
+[?2004l[?2004h>         total += v*h
+[?2004l[?2004h>         if 0.7 <= E < 0.8:
+[?2004l[?2004h>             b1 += v*h
+[?2004l[?2004h>         if 0.8 <= E < 0.9:
+[?2004l[?2004h>             b2 += v*h
+[?2004l[?2004h>     norm = flux/total
+[?2004l[?2004h>     print(f'{name}: band1={b1*norm:.3e}, band2={b2*norm:.3e}, ratio={b1/b2 if b2 else float("nan"):.3f}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # 7Be line flux is about 4.9e9 cm^-2 s^-1, all in band 2.
+[?2004l[?2004h> print('7Be line in band2: 4.9e9')
+[?2004l[?2004h> PY
+[?2004l13N: band1=4.071e+07, band2=3.986e+07, ratio=1.021
+15O: band1=1.763e+07, band2=1.951e+07, ratio=0.903
+17F: band1=4.403e+05, band2=4.874e+05, ratio=0.903
+7Be line in band2: 4.9e9
+[?2004hroot@d12edfaa61ae:/app# echo -n "C" > /app/answer.txt
+[?2004l[?2004hroot@d12edfaa61ae:/app# 

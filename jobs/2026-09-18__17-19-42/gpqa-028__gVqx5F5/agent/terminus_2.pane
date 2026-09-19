@@ -1,0 +1,67 @@
+[?2004hroot@4f4107be8673:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@4f4107be8673:/app# clear
+[?2004l[H[J[3J[?2004hroot@4f4107be8673:/app# python3 - <<'PY'
+[?2004l[?2004h> from difflib import SequenceMatcher
+[?2004l[?2004h> intact='ATGTTTCTCGCTGGTACTTCTGTGGATGAACATATTTATTGTCGT'
+[?2004l[?2004h> mutants={
+[?2004l[?2004h>  'm1':'ATGTTCTACGCTGGTACTTCTGTGGATGAACATATTTATTGTCGC',
+[?2004l[?2004h>  'm2':'ATGTTCTAAGCTGGTACTTCTGTGGATGAACATATTTATTGTCGC',
+[?2004l[?2004h>  'm3':'ATGTTTTACGCTGGTGTCACTTCTGTGGATGAACATATTTATTGTCGT',
+[?2004l[?2004h>  'm4':'ATGTTTTACGCTACTTCTGTGGATGAACATATTTATTGTCGT'
+[?2004l[?2004h> }
+[?2004l[?2004h> bases='TCAG'
+[?2004l[?2004h> aas='FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
+[?2004l[?2004h> code={b1+b2+b3:aas[i*16+j*4+k] for i,b1 in enumerate(bases) for j,b2 in enumerate(bases) for k,b3 in enumerate(bases)}
+[?2004l[?2004h> for name,s in mutants.items():
+[?2004l[?2004h>     print('\n'+name, 'len', len(s), 'intact_len', len(intact))
+[?2004l[?2004h>     for tag,i1,i2,j1,j2 in SequenceMatcher(None,intact,s,autojunk=False).get_opcodes():
+[?2004l[?2004h>         print(f'{tag:8s} intact[{i1}:{i2}]={intact[i1:i2]!r} mutant[{j1}:{j2}]={s[j1:j2]!r}')
+[?2004l[?2004h>     aa=[]
+[?2004l[?2004h>     for i in range(0,len(s)-2,3):
+[?2004l[?2004h>         c=s[i:i+3]
+[?2004l[?2004h>         aa.append(code.get(c,'?'))
+[?2004l[?2004h>         if code.get(c)=='*': break
+[?2004l[?2004h>     print('translation:', ' '.join(aa))
+[?2004l[?2004h> PY
+[?2004l
+m1 len 45 intact_len 45
+equal    intact[0:5]='ATGTT' mutant[0:5]='ATGTT'
+delete   intact[5:6]='T' mutant[5:5]=''
+equal    intact[6:8]='CT' mutant[5:7]='CT'
+insert   intact[8:8]='' mutant[7:8]='A'
+equal    intact[8:44]='CGCTGGTACTTCTGTGGATGAACATATTTATTGTCG' mutant[8:44]='CGCTGGTACTTCTGTGGATGAACATATTTATTGTCG'
+replace  intact[44:45]='T' mutant[44:45]='C'
+translation: M F Y A G T S V D E H I Y C R
+
+m2 len 45 intact_len 45
+equal    intact[0:5]='ATGTT' mutant[0:5]='ATGTT'
+delete   intact[5:6]='T' mutant[5:5]=''
+equal    intact[6:8]='CT' mutant[5:7]='CT'
+replace  intact[8:9]='C' mutant[7:9]='AA'
+equal    intact[9:44]='GCTGGTACTTCTGTGGATGAACATATTTATTGTCG' mutant[9:44]='GCTGGTACTTCTGTGGATGAACATATTTATTGTCG'
+replace  intact[44:45]='T' mutant[44:45]='C'
+translation: M F *
+
+m3 len 48 intact_len 45
+equal    intact[0:6]='ATGTTT' mutant[0:6]='ATGTTT'
+delete   intact[6:7]='C' mutant[6:6]=''
+equal    intact[7:8]='T' mutant[6:7]='T'
+insert   intact[8:8]='' mutant[7:8]='A'
+equal    intact[8:15]='CGCTGGT' mutant[8:15]='CGCTGGT'
+insert   intact[15:15]='' mutant[15:18]='GTC'
+equal    intact[15:45]='ACTTCTGTGGATGAACATATTTATTGTCGT' mutant[18:48]='ACTTCTGTGGATGAACATATTTATTGTCGT'
+translation: M F Y A G V T S V D E H I Y C R
+
+m4 len 42 intact_len 45
+equal    intact[0:6]='ATGTTT' mutant[0:6]='ATGTTT'
+delete   intact[6:7]='C' mutant[6:6]=''
+equal    intact[7:8]='T' mutant[6:7]='T'
+insert   intact[8:8]='' mutant[7:8]='A'
+equal    intact[8:11]='CGC' mutant[8:11]='CGC'
+delete   intact[11:14]='TGG' mutant[11:11]=''
+equal    intact[14:45]='TACTTCTGTGGATGAACATATTTATTGTCGT' mutant[11:42]='TACTTCTGTGGATGAACATATTTATTGTCGT'
+translation: M F Y A T S V D E H I Y C R
+[?2004hroot@4f4107be8673:/app# echo -n "D" > /app/answer.txt
+[?2004l[?2004hroot@4f4107be8673:/app# 

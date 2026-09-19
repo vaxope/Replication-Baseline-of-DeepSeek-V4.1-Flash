@@ -1,0 +1,206 @@
+[?2004hroot@77891f5a0413:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@77891f5a0413:/app# clear
+[?2004l[H[J[3J[?2004hroot@77891f5a0413:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> C = 0.1/106.845/0.1  # mol/L total Fe after dissolution in 100 cm3
+[?2004l[?2004h> Kw = 1e-14
+[?2004l[?2004h> b1 = 10**-2.2
+[?2004l[?2004h> b2 = 10**-5.7
+[?2004l[?2004h> b3 = 10**-12.3
+[?2004l[?2004h> print('C =', C, 'stoich V =', 3000*C, 'cm3')
+[?2004l[?2004h> for Ksp in [1e-38, 2e-39, 2.79e-39, 3e-39, 4e-38, 1e-39, 1e-40]:
+[?2004l[?2004h>     def f(h):
+[?2004l[?2004h>         free = Ksp*h**3/Kw**3
+[?2004l[?2004h>         return C - free*(1 + b1/h + b2/h**2 + b3/h**3)
+[?2004l[?2004h>     lo, hi = 1e-6, 0.1
+[?2004l[?2004h>     for _ in range(200):
+[?2004l[?2004h>         mid=(lo+hi)/2
+[?2004l[?2004h>         if f(lo)*f(mid) <= 0: hi=mid
+[?2004l[?2004h>         else: lo=mid
+[?2004l[?2004h>     h=(lo+hi)/2
+[?2004l[?2004h>     free=Ksp*h**3/Kw**3
+[?2004l[?2004h>     feoh=b1*free/h
+[?2004l[?2004h>     feoh2=b2*free/h**2
+[?2004l[?2004h>     feoh3=b3*free/h**3
+[?2004l[?2004h>     chloride=h+3*free+2*feoh+feoh2
+[?2004l[?2004h>     V=1000*chloride
+[?2004l[?2004h>     print(f'Ksp={Ksp:.2e} pH={-math.log10(h):.3f} freeFe={free:.3e} FeOH={feoh:.3e} FeOH2={feoh2:.3e} V={V:.2f} cm3 q={V/(3000*C):.3f}')
+[?2004l[?2004h> PY
+[?2004lC = 0.00935935233281857 stoich V = 28.078056998455708 cm3
+Ksp=1.00e-38 pH=2.096 freeFe=5.147e-03 FeOH=4.052e-03 FeOH2=1.599e-04 V=31.72 cm3 q=1.130
+Ksp=2.00e-39 pH=1.829 freeFe=6.524e-03 FeOH=2.776e-03 FeOH2=5.918e-05 V=40.02 cm3 q=1.425
+Ksp=2.79e-39 pH=1.883 freeFe=6.267e-03 FeOH=3.019e-03 FeOH2=7.291e-05 V=38.01 cm3 q=1.354
+Ksp=3.00e-39 pH=1.895 freeFe=6.209e-03 FeOH=3.074e-03 FeOH2=7.628e-05 V=37.60 cm3 q=1.339
+Ksp=4.00e-38 pH=2.342 freeFe=3.770e-03 FeOH=5.227e-03 FeOH2=3.632e-04 V=26.68 cm3 q=0.950
+Ksp=1.00e-39 pH=1.718 freeFe=7.010e-03 FeOH=2.311e-03 FeOH2=3.819e-05 V=44.83 cm3 q=1.597
+Ksp=1.00e-40 pH=1.363 freeFe=8.163e-03 FeOH=1.187e-03 FeOH2=8.655e-06 V=70.25 cm3 q=2.502
+[?2004hroot@77891f5a0413:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> M=106.845
+[?2004l[?2004h> n=0.1/M
+[?2004l[?2004h> V=0.1  # L final total
+[?2004l[?2004h> C=n/V
+[?2004l[?2004h> Ca=0.1
+[?2004l[?2004h> Kw=1e-14
+[?2004l[?2004h> b1=10**-2.2
+[?2004l[?2004h> b2=10**-5.7
+[?2004l[?2004h> b3=10**-12.3
+[?2004l[?2004h> b4=10**-21.6
+[?2004l[?2004h> 
+[?2004l[?2004h> def iron_dist(h):
+[?2004l[?2004h>     D=1+b1/h+b2/h**2+b3/h**3+b4*h
+[?2004l[?2004h>     fe=C/D
+[?2004l[?2004h>     feoh=b1*fe/h
+[?2004l[?2004h>     feoh2=b2*fe/h**2
+[?2004l[?2004h>     feoh3=b3*fe/h**3
+[?2004l[?2004h>     feoh4=b4*fe*h
+[?2004l[?2004h>     return fe,feoh,feoh2,feoh3,feoh4
+[?2004l[?2004h> 
+[?2004l[?2004h> def solve_h_for_Cl(Cl):
+[?2004l[?2004h>     # charge balance with total Fe C and no solid: Cl + OH = H + 3Fe + 2FeOH + FeOH2 - FeOH4
+[?2004l[?2004h>     lo,hi=1e-8,1.0
+[?2004l[?2004h>     def f(h):
+[?2004l[?2004h>         fe,feoh,feoh2,feoh3,feoh4=iron_dist(h)
+[?2004l[?2004h>         return Cl + Kw/h - (h + 3*fe + 2*feoh + feoh2 - feoh4)
+[?2004l[?2004h>     for _ in range(300):
+[?2004l[?2004h>         mid=(lo+hi)/2
+[?2004l[?2004h>         if f(lo)*f(mid)<=0: hi=mid
+[?2004l[?2004h>         else: lo=mid
+[?2004l[?2004h>     return (lo+hi)/2
+[?2004l[?2004h> 
+[?2004l[?2004h> print('n Fe =',n,'stoich acid V =',3*n/Ca*1000,'cm3')
+[?2004l[?2004h> for Va in [0.02805,0.028078,0.03009,0.03214,0.02040]:
+[?2004l[?2004h>     Cl=Ca*Va/V
+[?2004l[?2004h>     h=solve_h_for_Cl(Cl)
+[?2004l[?2004h>     fe,feoh,feoh2,feoh3,feoh4=iron_dist(h)
+[?2004l[?2004h>     print(f'No solid: Va={Va*1000:.2f} mL Cl={Cl:.5f} pH={-math.log10(h):.3f} Fe3+={fe:.3e} FeOH2+={feoh:.3e} Fe(OH)2+={feoh2:.3e} avg charge={(3*fe+2*feoh+feoh2-feoh4)/C:.3f}')
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nSaturated models (minimum acid for complete dissolution, solid at equilibrium):')
+[?2004l[?2004h> for Ksp in [4e-38,2e-38,1e-38,7e-39,5e-39,3e-39,2.79e-39,1e-39,1e-40]:
+[?2004l[?2004h>     lo,hi=1e-8,0.2
+[?2004l[?2004h>     def g(h):
+[?2004l[?2004h>         fe=Ksp*h**3/Kw**3
+[?2004l[?2004h>         D=1+b1/h+b2/h**2+b3/h**3+b4*h
+[?2004l[?2004h>         return fe*D - C
+[?2004l[?2004h>     # g low pH positive? evaluate bracket
+[?2004l[?2004h>     for _ in range(300):
+[?2004l[?2004h>         mid=(lo+hi)/2
+[?2004l[?2004h>         if g(lo)*g(mid)<=0: hi=mid
+[?2004l[?2004h>         else: lo=mid
+[?2004l[?2004h>     h=(lo+hi)/2
+[?2004l[?2004h>     fe=Ksp*h**3/Kw**3
+[?2004l[?2004h>     feoh=b1*fe/h; feoh2=b2*fe/h**2; feoh3=b3*fe/h**3; feoh4=b4*fe*h
+[?2004l[?2004h>     Cl=h+3*fe+2*feoh+feoh2-feoh4-Kw/h
+[?2004l[?2004h>     Va=Cl*V/Ca
+[?2004l[?2004h>     print(f'Ksp={Ksp:.3e} pH={-math.log10(h):.3f} Va={Va*1000:.2f} mL freeFe={fe:.3e} avg charge={(3*fe+2*feoh+feoh2-feoh4)/C:.3f}')
+[?2004l[?2004h> PY
+[?2004ln Fe = 0.000935935233281857 stoich acid V = 28.078056998455708 cm3
+No solid: Va=28.05 mL Cl=0.02805 pH=2.266 Fe3+=4.194e-03 FeOH2+=4.881e-03 Fe(OH)2+=2.847e-04 avg charge=2.418
+No solid: Va=28.08 mL Cl=0.02808 pH=2.264 Fe3+=4.202e-03 FeOH2+=4.874e-03 Fe(OH)2+=2.833e-04 avg charge=2.419
+No solid: Va=30.09 mL Cl=0.03009 pH=2.166 Fe3+=4.756e-03 FeOH2+=4.400e-03 Fe(OH)2+=2.040e-04 avg charge=2.486
+No solid: Va=32.14 mL Cl=0.03214 pH=2.079 Fe3+=5.240e-03 FeOH2+=3.968e-03 Fe(OH)2+=1.506e-04 avg charge=2.544
+No solid: Va=20.40 mL Cl=0.02040 pH=2.823 Fe3+=1.539e-03 FeOH2+=6.461e-03 Fe(OH)2+=1.360e-03 avg charge=2.019
+
+Saturated models (minimum acid for complete dissolution, solid at equilibrium):
+Ksp=4.000e-38 pH=2.342 Va=26.68 mL freeFe=3.770e-03 avg charge=2.364
+Ksp=2.000e-38 pH=2.217 Va=29.01 mL freeFe=4.470e-03 avg charge=2.452
+Ksp=1.000e-38 pH=2.096 Va=31.72 mL freeFe=5.147e-03 avg charge=2.533
+Ksp=7.000e-39 pH=2.035 Va=33.29 mL freeFe=5.479e-03 avg charge=2.572
+Ksp=5.000e-39 pH=1.979 Va=34.89 mL freeFe=5.780e-03 avg charge=2.606
+Ksp=3.000e-39 pH=1.895 Va=37.60 mL freeFe=6.209e-03 avg charge=2.655
+Ksp=2.790e-39 pH=1.883 Va=38.01 mL freeFe=6.267e-03 avg charge=2.662
+Ksp=1.000e-39 pH=1.718 Va=44.83 mL freeFe=7.010e-03 avg charge=2.745
+Ksp=1.000e-40 pH=1.363 Va=70.25 mL freeFe=8.163e-03 avg charge=2.871
+[?2004hroot@77891f5a0413:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> C=0.1/106.845/0.1
+[?2004l[?2004h> Kw=1e-14
+[?2004l[?2004h> b1=10**-2.2; b2=10**-5.7; b3=10**-12.3; b4=10**-21.6
+[?2004l[?2004h> opts={'A':(2.04,28.05),'B':(3.16,32.14),'C':(4.94,20.40),'D':(2.69,30.09)}
+[?2004l[?2004h> print('Reverse-engineered saturated models (all Fe dissolved, solid just disappears):')
+[?2004l[?2004h> for key,(pH,V) in opts.items():
+[?2004l[?2004h>     h=10**-pH
+[?2004l[?2004h>     D=1+b1/h+b2/h**2+b3/h**3+b4*h
+[?2004l[?2004h>     free=C/D
+[?2004l[?2004h>     Ksp=free*(Kw/h)**3  # free * OH^3
+[?2004l[?2004h>     feoh=b1*free/h; feoh2=b2*free/h**2; feoh3=b3*free/h**3; feoh4=b4*free*h
+[?2004l[?2004h>     Cl=h+3*free+2*feoh+feoh2-feoh4-Kw/h
+[?2004l[?2004h>     Vcalc=Cl*1000
+[?2004l[?2004h>     print(f'{key}: given V={V:.2f} mL pH={pH:.2f}; required Ksp={Ksp:.3e}; expected V={Vcalc:.2f} mL; avg charge={(3*free+2*feoh+feoh2-feoh4)/C:.3f}')
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nReverse-engineered no-solid models (all Fe in solution, acid gives Cl):')
+[?2004l[?2004h> for key,(pH,V) in opts.items():
+[?2004l[?2004h>     h=10**-pH
+[?2004l[?2004h>     D=1+b1/h+b2/h**2+b3/h**3+b4*h
+[?2004l[?2004h>     fe=C/D; feoh=b1*fe/h; feoh2=b2*fe/h**2; feoh3=b3*fe/h**3; feoh4=b4*fe*h
+[?2004l[?2004h>     Cl=h+3*fe+2*feoh+feoh2-feoh4-Kw/h
+[?2004l[?2004h>     Vcalc=Cl*1000
+[?2004l[?2004h>     print(f'{key}: given V={V:.2f} mL pH={pH:.2f}; expected V={Vcalc:.2f} mL; Ksp_if_sat={fe*(Kw/h)**3:.3e}')
+[?2004l[?2004h> PY
+[?2004lReverse-engineered saturated models (all Fe dissolved, solid just disappears):
+A: given V=28.05 mL pH=2.04; required Ksp=7.191e-39; expected V=33.16 mL; avg charge=2.569
+B: given V=32.14 mL pH=3.16; required Ksp=1.978e-36; expected V=17.33 mL; avg charge=1.778
+C: given V=20.40 mL pH=4.94; required Ksp=3.861e-34; expected V=9.50 mL; avg charge=1.014
+D: given V=30.09 mL pH=2.69; required Ksp=2.407e-37; expected V=21.83 mL; avg charge=2.114
+
+Reverse-engineered no-solid models (all Fe in solution, acid gives Cl):
+A: given V=28.05 mL pH=2.04; expected V=33.16 mL; Ksp_if_sat=7.191e-39
+B: given V=32.14 mL pH=3.16; expected V=17.33 mL; Ksp_if_sat=1.978e-36
+C: given V=20.40 mL pH=4.94; expected V=9.50 mL; Ksp_if_sat=3.861e-34
+D: given V=30.09 mL pH=2.69; expected V=21.83 mL; Ksp_if_sat=2.407e-37
+[?2004hroot@77891f5a0413:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> C=0.1/106.87/0.1
+[?2004l[?2004h> Kw=1e-14
+[?2004l[?2004h> b1=10**-2.2; b2=10**-5.7; b3=10**-12.3; b4=10**-21.6
+[?2004l[?2004h> print('C',C,'stoich V',3*C*1000)
+[?2004l[?2004h> print('Exact saturated endpoint (all Fe dissolved, solution just saturated):')
+[?2004l[?2004h> for Ksp in [4e-38,2e-38,1e-38,7e-39,4e-39,2.79e-39,1e-39,2e-37,5e-37,1.1e-36,2e-36,5e-36,1e-35]:
+[?2004l[?2004h>     lo,hi=1e-10,1.0
+[?2004l[?2004h>     def g(h):
+[?2004l[?2004h>         # total dissolved Fe at saturation against free Fe3+ from Ksp
+[?2004l[?2004h>         fe=Ksp*h**3/Kw**3
+[?2004l[?2004h>         D=1+b1/h+b2/h**2+b3/h**3+b4/h**4
+[?2004l[?2004h>         return fe*D-C
+[?2004l[?2004h>     # g should decrease/increase; use brent-like bisection find sign change
+[?2004l[?2004h>     glo,ghi=g(lo),g(hi)
+[?2004l[?2004h>     if glo*ghi>0:
+[?2004l[?2004h>         # try wider region
+[?2004l[?2004h>         hs=[10**(-x/2) for x in range(0,61)]
+[?2004l[?2004h>         found=False
+[?2004l[?2004h>         for a,b in zip(hs[:-1],hs[1:]):
+[?2004l[?2004h>             if g(a)*g(b)<=0:
+[?2004l[?2004h>                 lo,hi=a,b; found=True; break
+[?2004l[?2004h>         if not found:
+[?2004l[?2004h>             print('no root Ksp',Ksp,glo,ghi); continue
+[?2004l[?2004h>     for _ in range(400):
+[?2004l[?2004h>         mid=(lo+hi)/2
+[?2004l[?2004h>         if g(lo)*g(mid)<=0: hi=mid
+[?2004l[?2004h>         else: lo=mid
+[?2004l[?2004h>     h=(lo+hi)/2
+[?2004l[?2004h>     fe=Ksp*h**3/Kw**3
+[?2004l[?2004h>     feoh=b1*fe/h; feoh2=b2*fe/h**2; feoh3=b3*fe/h**3; feoh4=b4*fe/h**4
+[?2004l[?2004h>     Cl=h+3*fe+2*feoh+feoh2-feoh4-Kw/h
+[?2004l[?2004h>     V=Cl/C*28.05  # scale relative to stoich
+[?2004l[?2004h>     V=Cl*1000
+[?2004l[?2004h>     print(f'Ksp={Ksp:.3e} pH={-math.log10(h):.3f} V={V:.2f} mL freeFe={fe:.3e} avg charge={(3*fe+2*feoh+feoh2-feoh4)/C:.3f}')
+[?2004l[?2004h> PY
+[?2004lC 0.009357162908206231 stoich V 28.071488724618693
+Exact saturated endpoint (all Fe dissolved, solution just saturated):
+Ksp=4.000e-38 pH=2.342 V=26.67 mL freeFe=3.768e-03 avg charge=2.364
+Ksp=2.000e-38 pH=2.217 V=29.01 mL freeFe=4.469e-03 avg charge=2.452
+Ksp=1.000e-38 pH=2.096 V=31.71 mL freeFe=5.146e-03 avg charge=2.533
+Ksp=7.000e-39 pH=2.035 V=33.28 mL freeFe=5.478e-03 avg charge=2.572
+Ksp=4.000e-39 pH=1.942 V=36.02 mL freeFe=5.970e-03 avg charge=2.628
+Ksp=2.790e-39 pH=1.883 V=38.00 mL freeFe=6.265e-03 avg charge=2.662
+Ksp=1.000e-39 pH=1.718 V=44.82 mL freeFe=7.008e-03 avg charge=2.745
+Ksp=2.000e-37 pH=2.652 V=22.26 mL freeFe=2.209e-03 avg charge=2.141
+Ksp=5.000e-37 pH=2.844 V=20.18 mL freeFe=1.466e-03 avg charge=2.004
+Ksp=1.100e-36 pH=3.021 V=18.53 mL freeFe=9.536e-04 avg charge=1.878
+Ksp=2.000e-36 pH=3.163 V=17.31 mL freeFe=6.497e-04 avg charge=1.776
+Ksp=5.000e-36 pH=3.398 V=15.44 mL freeFe=3.198e-04 avg charge=1.607
+Ksp=1.000e-35 pH=3.594 V=14.04 mL freeFe=1.657e-04 avg charge=1.473
+[?2004hroot@77891f5a0413:/app# echo -n "D" > /app/answer.txt
+[?2004l[?2004hroot@77891f5a0413:/app# 

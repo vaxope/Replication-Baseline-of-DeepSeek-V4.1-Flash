@@ -1,0 +1,344 @@
+[?2004hroot@976c7b1f9f84:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@976c7b1f9f84:/app# clear
+[?2004l[H[J[3J[?2004hroot@976c7b1f9f84:/app# python3 -c "import rdkit; print(rdkit.__version__)"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'rdkit'
+[?2004hroot@976c7b1f9f84:/app# which obabel || which babel || true
+[?2004l[?2004hroot@976c7b1f9f84:/app# python3 -c "import openbabel; print('openbabel py available')" 2>/dev/null || true
+[?2004l[?2004hroot@976c7b1f9f84:/app# python3 -m pip list 2>/dev/null | grep -Ei 'rdkit|openbabel|chem|inchi|networkx|numpy|scipy|sympy' || true
+[?2004l[?2004hroot@976c7b1f9f84:/app# python3 - <<'EOF'
+[?2004l[?2004h> import numpy as np
+[?2004l[?2004h> 
+[?2004l[?2004h> def rs(center, ligands):
+[?2004l[?2004h>     # ligands: list of (name, coords, priority 1-4)
+[?2004l[?2004h>     # CIP: view with priority 4 pointing away, 1->2->3 clockwise = R
+[?2004l[?2004h>     c = np.array(center, float)
+[?2004l[?2004h>     d = {}
+[?2004l[?2004h>     for name, xyz, p in ligands:
+[?2004l[?2004h>         v = np.array(xyz,float)-c
+[?2004l[?2004h>         d[p] = v/np.linalg.norm(v)
+[?2004l[?2004h>     # sign of scalar triple product d1 . (d2 x d3)
+[?2004l[?2004h>     # if d4 points away (negative viewing direction), positive triple = clockwise? We'll test with simple known.
+[?2004l[?2004h>     s = np.dot(d[1], np.cross(d[2], d[3]))
+[?2004l[?2004h>     # For a standard tetrahedron, this sign gives one configuration; map sign to R/S based on test below.
+[?2004l[?2004h>     return 'R' if s < 0 else 'S', s
+[?2004l[?2004h> 
+[?2004l[?2004h> def norm(v):
+[?2004l[?2004h>     v=np.array(v,float); return v/np.linalg.norm(v)
+[?2004l[?2004h> 
+[?2004l[?2004h> # approximate cage coords
+[?2004l[?2004h> B1=np.array([-1.4,0,0.0]) # C4
+[?2004l[?2004h> B2=np.array([ 1.4,0,0.0]) # C7
+[?2004l[?2004h> E1=np.array([-0.7,1.2,0.0]) # C5
+[?2004l[?2004h> E2=np.array([ 0.7,1.2,0.0]) # C6
+[?2004l[?2004h> A1=np.array([-0.7,-1.2,0.0]) # C3a
+[?2004l[?2004h> A2=np.array([ 0.7,-1.2,0.0]) # C7a
+[?2004l[?2004h> C8=np.array([0,0,1.4])
+[?2004l[?2004h> 
+[?2004l[?2004h> # carbonyls: endo = same side as C8 (+z)
+[?2004l[?2004h> CA=np.array([A1[0]-0.3,A1[1]-0.5,A1[2]+1.2]) # carbonyl C attached to A1
+[?2004l[?2004h> CB=np.array([A2[0]+0.3,A2[1]-0.5,A2[2]+1.2])
+[?2004l[?2004h> # A-H: exo (-z)
+[?2004l[?2004h> HA1=np.array([A1[0]-0.3,A1[1]-0.3,A1[2]-1.0])
+[?2004l[?2004h> HA2=np.array([A2[0]+0.3,A2[1]-0.3,A2[2]-1.0])
+[?2004l[?2004h> 
+[?2004l[?2004h> def opposite_sum(v, scale=1.0):
+[?2004l[?2004h>     v=np.array(v)
+[?2004l[?2004h>     return -v/np.linalg.norm(v)*scale
+[?2004l[?2004h> 
+[?2004l[?2004h> # H on B1/B2
+[?2004l[?2004h> HB1=B1+opposite_sum((A1-B1)+(E1-B1)+(C8-B1),1.0)
+[?2004l[?2004h> HB2=B2+opposite_sum((A2-B2)+(E2-B2)+(C8-B2),1.0)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C8 substituent positions: directions toward A side (-y,+z) and E side (+y,+z)
+[?2004l[?2004h> F_endo = C8 + norm([0,-1.0,1.0])*1.1
+[?2004l[?2004h> F_exo  = C8 + norm([0, 1.0,1.0])*1.1
+[?2004l[?2004h> H_anti = C8 + norm([0, 1.0,1.0])*1.0   # opposite F if F endo
+[?2004l[?2004h> H_endo = C8 + norm([0,-1.0,1.0])*1.0
+[?2004l[?2004h> 
+[?2004l[?2004h> # first test chirality on a known simple center to calibrate sign
+[?2004l[?2004h> # Tetrahedral center at origin with priorities 1=(1,0,0),2=(0,1,0),3=(0,0,1),4=(-1,-1,-1)
+[?2004l[?2004h> cal=rs([0,0,0],[('1',[1,0,0],1),('2',[0,1,0],2),('3',[0,0,1],3),('4',[-1,-1,-1],4)])
+[?2004l[?2004h> print('calibration',cal)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Descriptor calculations with assumed priority ranks
+[?2004l[?2004h> # core centers
+[?2004l[?2004h> print('B1/C4 core', rs(B1,[('C8',C8,1),('A1',A1,2),('E1',E1,3),('H',HB1,4)]))
+[?2004l[?2004h> print('B2/C7 core', rs(B2,[('C8',C8,1),('A2',A2,2),('E2',E2,3),('H',HB2,4)]))
+[?2004l[?2004h> print('A1/C3a core', rs(A1,[('CA',CA,1),('A2',A2,2),('B1',B1,3),('H',HA1,4)]))
+[?2004l[?2004h> print('A2/C7a core', rs(A2,[('CB',CB,1),('A1',A1,2),('B2',B2,3),('H',HA2,4)]))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C8 with F endo, and priorities B2(R) > B1(S) if core B1 S/B2 R; try both orders
+[?2004l[?2004h> print('C8 F syn/anhydride, order B2=2,B1=3', rs(C8,[('F',F_endo,1),('B2',B2,2),('B1',B1,3),('H',H_anti,4)]))
+[?2004l[?2004h> print('C8 F anti/anhydride, order B2=2,B1=3', rs(C8,[('F',F_exo,1),('B2',B2,2),('B1',B1,3),('H',H_endo,4)]))
+[?2004l[?2004h> print('C8 F syn/anhydride, order B1=2,B2=3', rs(C8,[('F',F_endo,1),('B1',B1,2),('B2',B2,3),('H',H_anti,4)]))
+[?2004l[?2004h> print('C8 F anti/anhydride, order B1=2,B2=3', rs(C8,[('F',F_exo,1),('B1',B1,2),('B2',B2,3),('H',H_endo,4)]))
+[?2004l[?2004h> EOF
+[?2004lTraceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ModuleNotFoundError: No module named 'numpy'
+[?2004hroot@976c7b1f9f84:/app# python3 - <<'EOF'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(x-y for x,y in zip(a,b))
+[?2004l[?2004h> def add(a,b): return tuple(x+y for x,y in zip(a,b))
+[?2004l[?2004h> def mul(a,s): return tuple(x*s for x in a)
+[?2004l[?2004h> def dot(a,b): return sum(x*y for x,y in zip(a,b))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a):
+[?2004l[?2004h>     l=math.sqrt(dot(a,a)); return tuple(x/l for x in a)
+[?2004l[?2004h> def unit(v): return norm(v)
+[?2004l[?2004h> 
+[?2004l[?2004h> def rs(center, ligs):
+[?2004l[?2004h>     # ligs list of (label, coords, priority 1=highest..4=lowest)
+[?2004l[?2004h>     vs={p:unit(sub(xyz,center)) for (_,xyz,p) in ligs}
+[?2004l[?2004h>     v4=vs[4]
+[?2004l[?2004h>     k=(0.0,0.0,-1.0)
+[?2004l[?2004h>     a=(1.0,0.0,0.0) if abs(v4[0])<0.9 else (0.0,1.0,0.0)
+[?2004l[?2004h>     e1=unit(cross(v4,a))
+[?2004l[?2004h>     e2=cross(k,e1)
+[?2004l[?2004h>     xy=[]
+[?2004l[?2004h>     for p in (1,2,3):
+[?2004l[?2004h>         v=vs[p]
+[?2004l[?2004h>         xy.append((dot(v,e1), dot(v,e2)))
+[?2004l[?2004h>     (x1,y1),(x2,y2),(x3,y3)=xy
+[?2004l[?2004h>     s=(x2-x1)*(y3-y1)-(y2-y1)*(x3-x1)
+[?2004l[?2004h>     return 'R' if s<0 else 'S', s
+[?2004l[?2004h> 
+[?2004l[?2004h> # Bicyclic cage coordinates: A=C4 left, D=C7 right, C8 bridge top.
+[?2004l[?2004h> C8=(0.0,0.0,1.0)
+[?2004l[?2004h> A=(-0.98,0.0,0.31)   # C4
+[?2004l[?2004h> D=( 0.98,0.0,0.31)   # C7
+[?2004l[?2004h> B=(-0.72,1.05,0.25)  # C5
+[?2004l[?2004h> C=( 0.72,1.05,0.25)  # C6
+[?2004l[?2004h> E=(-0.72,-1.05,0.25) # C3a
+[?2004l[?2004h> F=( 0.72,-1.05,0.25) # C7a
+[?2004l[?2004h> 
+[?2004l[?2004h> # Endo anhydride/carbonyls: towards C8 (+z side relative to E/F)
+[?2004l[?2004h> G=(-0.85,-1.45,1.25) # carbonyl C attached to C3a
+[?2004l[?2004h> Hc=(0.85,-1.45,1.25) # carbonyl C attached to C7a
+[?2004l[?2004h> ExoG=(-0.85,-1.45,-0.65)
+[?2004l[?2004h> ExoHc=(0.85,-1.45,-0.65)
+[?2004l[?2004h> 
+[?2004l[?2004h> def opposite_sum(center, neighbors, length=1.0):
+[?2004l[?2004h>     s=(0.0,0.0,0.0)
+[?2004l[?2004h>     for n in neighbors: s=add(s,sub(n,center))
+[?2004l[?2004h>     return add(center, mul(unit(s), -length))
+[?2004l[?2004h> 
+[?2004l[?2004h> HA=opposite_sum(A,[B,E,C8],0.8)
+[?2004l[?2004h> HD=opposite_sum(D,[C,F,C8],0.8)
+[?2004l[?2004h> HB=opposite_sum(B,[A,C,C],0.8) # C is alkene carbon
+[?2004l[?2004h> HC=opposite_sum(C,[D,B,B],0.8)
+[?2004l[?2004h> HE=opposite_sum(E,[A,F,G],0.8)
+[?2004l[?2004h> HF=opposite_sum(F,[D,E,Hc],0.8)
+[?2004l[?2004h> 
+[?2004l[?2004h> # approximate bridge hydrogens depending on F orientation
+[?2004l[?2004h> # tetrahedral C8 directions from local C8: v1 +y/up, v2 -y/up
+[?2004l[?2004h> v_BC=unit((0.0, 1.0, 1.0))   # exo side toward alkene bridge
+[?2004l[?2004h> v_EF=unit((0.0,-1.0, 1.0))   # endo side toward anhydride bridge
+[?2004l[?2004h> F_endo=add(C8,mul(v_EF,1.0))
+[?2004l[?2004h> H_endo=add(C8,mul(v_BC,1.0))
+[?2004l[?2004h> F_exo=add(C8,mul(v_BC,1.0))
+[?2004l[?2004h> H_exo=add(C8,mul(v_EF,1.0))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('Bridge descriptors:')
+[?2004l[?2004h> for name,Fpos,Hpos in [('F endo',F_endo,H_endo),('F exo',F_exo,H_exo)]:
+[?2004l[?2004h>     # at C8 priorities: F=1; R ring center outranks S; 4=H
+[?2004l[?2004h>     # We'll compute both possible priority orders and see.
+[?2004l[?2004h>     for order in [('C7R over C4S', D, A), ('C4R over C7S', A, D)]:
+[?2004l[?2004h>         desc,s=rs(C8,[('F',Fpos,1),(order[0],order[1],2),(order[0],order[2],3),('H',Hpos,4)])
+[?2004l[?2004h>         print(name, 'order', order[0], '=>', desc, 's=',round(s,3))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nCore descriptors with endo G/Hc:')
+[?2004l[?2004h> print('C4', rs(A,[('C8',C8,1),('E',E,2),('B',B,3),('H',HA,4)]))
+[?2004l[?2004h> print('C7', rs(D,[('C8',C8,1),('F',F,2),('C',C,3),('H',HD,4)]))
+[?2004l[?2004h> print('C3a', rs(E,[('G',G,1),('F',F,2),('A',A,3),('H',HE,4)]))
+[?2004l[?2004h> print('C7a', rs(F,[('Hc',Hc,1),('E',E,2),('D',D,3),('H',HF,4)]))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nCore descriptors with exo G/Hc:')
+[?2004l[?2004h> print('C4', rs(A,[('C8',C8,1),('E',E,2),('B',B,3),('H',HA,4)]))
+[?2004l[?2004h> print('C7', rs(D,[('C8',C8,1),('F',F,2),('C',C,3),('H',HD,4)]))
+[?2004l[?2004h> print('C3a', rs(E,[('ExoG',ExoG,1),('F',F,2),('A',A,3),('H',HE,4)]))
+[?2004l[?2004h> print('C7a', rs(F,[('ExoHc',ExoHc,1),('E',E,2),('D',D,3),('H',HF,4)]))
+[?2004l[?2004h> EOF
+[?2004lBridge descriptors:
+F endo order C7R over C4S => R s= -1.627
+F endo order C4R over C7S => S s= 1.627
+F exo order C7R over C4S => S s= 1.627
+F exo order C4R over C7S => R s= -1.627
+
+Core descriptors with endo G/Hc:
+C4 ('R', -0.26490371599469925)
+C7 ('S', 0.26490371599469925)
+C3a ('R', -1.6027393505100789)
+C7a ('S', 1.6027393505100789)
+
+Core descriptors with exo G/Hc:
+C4 ('R', -0.26490371599469925)
+C7 ('S', 0.26490371599469925)
+C3a ('R', -0.6308275566575592)
+C7a ('S', 0.6308275566575592)
+[?2004hroot@976c7b1f9f84:/app# compgen -c | grep -Ei 'inchi|babel|obabel|openbabel|chem|rdkit|molconvert|indigo' | sort -u | head -100
+[?2004l[?2004hroot@976c7b1f9f84:/app# python3 - <<'EOF'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(x-y for x,y in zip(a,b))
+[?2004l[?2004h> def add(a,b): return tuple(x+y for x,y in zip(a,b))
+[?2004l[?2004h> def mul(a,s): return tuple(x*s for x in a)
+[?2004l[?2004h> def dot(a,b): return sum(x*y for x,y in zip(a,b))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a):
+[?2004l[?2004h>     l=math.sqrt(dot(a,a)); return tuple(x/l for x in a)
+[?2004l[?2004h> def unit(v): return norm(v)
+[?2004l[?2004h> def neg(v): return tuple(-x for x in v)
+[?2004l[?2004h> 
+[?2004l[?2004h> def rs(center, ligs):
+[?2004l[?2004h>     vs={p:unit(sub(xyz,center)) for (_,xyz,p) in ligs}
+[?2004l[?2004h>     v4=vs[4]
+[?2004l[?2004h>     a=(1.0,0.0,0.0) if abs(v4[0])<0.9 else (0.0,1.0,0.0)
+[?2004l[?2004h>     e1=unit(cross(v4,a))
+[?2004l[?2004h>     e2=cross(v4,e1)
+[?2004l[?2004h>     pts=[]
+[?2004l[?2004h>     for p in (1,2,3):
+[?2004l[?2004h>         v=vs[p]
+[?2004l[?2004h>         pts.append((dot(v,e1), dot(v,e2)))
+[?2004l[?2004h>     (x1,y1),(x2,y2),(x3,y3)=pts
+[?2004l[?2004h>     s=(x2-x1)*(y3-y1)-(y2-y1)*(x3-x1)
+[?2004l[?2004h>     return ('R' if s<0 else 'S'), s
+[?2004l[?2004h> 
+[?2004l[?2004h> # Cage with two-carbon bridges front/back and bridge carbon top
+[?2004l[?2004h> C8=(0.0,0.0,1.05)
+[?2004l[?2004h> C4=(-1.0,0.0,0.35)
+[?2004l[?2004h> C7=( 1.0,0.0,0.35)
+[?2004l[?2004h> C5=(-0.70,-1.00,-0.25) # alkene left
+[?2004l[?2004h> C6=( 0.70,-1.00,-0.25) # alkene right
+[?2004l[?2004h> C3a=(-0.70,1.00,-0.25) # maleic left
+[?2004l[?2004h> C7a=( 0.70,1.00,-0.25) # maleic right
+[?2004l[?2004h> 
+[?2004l[?2004h> # crude carbonyl carbons: endo carbonyls are on +z face (same side as bridge C8)
+[?2004l[?2004h> C1=(-1.15,1.35,0.55) # attached to C3a
+[?2004l[?2004h> C3=( 1.15,1.35,0.55) # attached to C7a
+[?2004l[?2004h> # hydrogens on bridgeheads via opposite sum
+[?2004l[?2004h> def opposite_sum(center, neigh, ln=1.0):
+[?2004l[?2004h>     v=add(add(sub(neigh[0],center),sub(neigh[1],center)),sub(neigh[2],center))
+[?2004l[?2004h>     return add(center,mul(unit(neg(v)),ln))
+[?2004l[?2004h> HC4=opposite_sum(C4,[C8,C5,C3a],0.8)
+[?2004l[?2004h> HC7=opposite_sum(C7,[C8,C6,C7a],0.8)
+[?2004l[?2004h> # hydrogens on maleic carbons: exo (-z) placed by opposite sum of heavy neighbors
+[?2004l[?2004h> HC3a=opposite_sum(C3a,[C7a,C4,C1],0.8)
+[?2004l[?2004h> HC7a=opposite_sum(C7a,[C3a,C7,C3],0.8)
+[?2004l[?2004h> 
+[?2004l[?2004h> print('C4 (priorities C3a > C8 > C5 > H):', rs(C4,[('C3a',C3a,1),('C8',C8,2),('C5',C5,3),('H',HC4,4)]))
+[?2004l[?2004h> print('C7 (priorities C7a > C8 > C6 > H):', rs(C7,[('C7a',C7a,1),('C8',C8,2),('C6',C6,3),('H',HC7,4)]))
+[?2004l[?2004h> print('C3a (priorities C1 > C7a > C4 > H):', rs(C3a,[('C1',C1,1),('C7a',C7a,2),('C4',C4,3),('H',HC3a,4)]))
+[?2004l[?2004h> print('C7a (priorities C3 > C3a > C7 > H):', rs(C7a,[('C3',C3,1),('C3a',C3a,2),('C7',C7,3),('H',HC7a,4)]))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C8 substituents: one direction toward anhydride bridge (endo) = +y (C3a/C7a side), one toward alkene bridge (-y)
+[?2004l[?2004h> v_endo=unit((0.0,1.0,1.0))   # toward anhydride side
+[?2004l[?2004h> v_exo=unit((0.0,-1.0,1.0))   # toward alkene side
+[?2004l[?2004h> F_endo=add(C8,mul(v_endo,1.0)); H_endo=add(C8,mul(v_exo,1.0))
+[?2004l[?2004h> F_exo =add(C8,mul(v_exo,1.0)); H_exo =add(C8,mul(v_endo,1.0))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nC8 descriptors (use C4/C7 priorities from above):')
+[?2004l[?2004h> for name,Fpos,Hpos in [('F toward anhydride',F_endo,H_endo),('F toward alkene',F_exo,H_exo)]:
+[?2004l[?2004h>     # first use C4 > C7 if C4 R and C7 S; otherwise reverse
+[?2004l[?2004h>     desc4,_=rs(C4,[('C3a',C3a,1),('C8',C8,2),('C5',C5,3),('H',HC4,4)])
+[?2004l[?2004h>     desc7,_=rs(C7,[('C7a',C7a,1),('C8',C8,2),('C6',C6,3),('H',HC7,4)])
+[?2004l[?2004h>     if desc4=='R' and desc7=='S':
+[?2004l[?2004h>         order=('C4(R)>C7(S)',C4,C7)
+[?2004l[?2004h>     elif desc4=='S' and desc7=='R':
+[?2004l[?2004h>         order=('C7(R)>C4(S)',C7,C4)
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         order=('C4 assumed > C7',C4,C7)
+[?2004l[?2004h>     d,s=rs(C8,[('F',Fpos,1),(order[0],order[1],2),(order[0]+'other',order[2],3),('H',Hpos,4)])
+[?2004l[?2004h>     print(name, 'priority order', order[0], '=>', d, 's=', round(s,3))
+[?2004l[?2004h> EOF
+[?2004lC4 (priorities C3a > C8 > C5 > H): ('R', -1.9814569082780782)
+C7 (priorities C7a > C8 > C6 > H): ('S', 1.9814569082780782)
+C3a (priorities C1 > C7a > C4 > H): ('S', 1.8284309055590813)
+C7a (priorities C3 > C3a > C7 > H): ('R', -1.8284309055590813)
+
+C8 descriptors (use C4/C7 priorities from above):
+F toward anhydride priority order C4(R)>C7(S) => S s= 2.303
+F toward alkene priority order C4(R)>C7(S) => R s= -2.303
+[?2004hroot@976c7b1f9f84:/app# python3 - <<'EOF'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(x-y for x,y in zip(a,b))
+[?2004l[?2004h> def add(a,b): return tuple(x+y for x,y in zip(a,b))
+[?2004l[?2004h> def mul(a,s): return tuple(x*s for x in a)
+[?2004l[?2004h> def dot(a,b): return sum(x*y for x,y in zip(a,b))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a):
+[?2004l[?2004h>     l=math.sqrt(dot(a,a)); return tuple(x/l for x in a)
+[?2004l[?2004h> def unit(v): return norm(v)
+[?2004l[?2004h> def neg(v): return tuple(-x for x in v)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Function returns proper R/S: calibrate with known arrangement 1=(1,0,0),2=(0,1,0),3=(0,0,1),4=(0,0,-1) -> S.
+[?2004l[?2004h> def rs(center, ligs):
+[?2004l[?2004h>     vs={p:unit(sub(xyz,center)) for (_,xyz,p) in ligs}
+[?2004l[?2004h>     v4=vs[4]
+[?2004l[?2004h>     a=(1.0,0.0,0.0) if abs(v4[0])<0.9 else (0.0,1.0,0.0)
+[?2004l[?2004h>     e1=unit(cross(v4,a))
+[?2004l[?2004h>     e2=cross(v4,e1)
+[?2004l[?2004h>     pts=[]
+[?2004l[?2004h>     for p in (1,2,3):
+[?2004l[?2004h>         v=vs[p]
+[?2004l[?2004h>         pts.append((dot(v,e1), dot(v,e2)))
+[?2004l[?2004h>     (x1,y1),(x2,y2),(x3,y3)=pts
+[?2004l[?2004h>     s=(x2-x1)*(y3-y1)-(y2-y1)*(x3-x1)
+[?2004l[?2004h>     return ('S' if s<0 else 'R'), s
+[?2004l[?2004h> 
+[?2004l[?2004h> # calibration
+[?2004l[?2004h> print('calibration (known S):', rs((0,0,0),[('1',(1,0,0),1),('2',(0,1,0),2),('3',(0,0,1),3),('4',(0,0,-1),4)]))
+[?2004l[?2004h> 
+[?2004l[?2004h> P4=(-1.0,0.0,0.0)
+[?2004l[?2004h> P7=( 1.0,0.0,0.0)
+[?2004l[?2004h> P8=( 0.0,0.0,1.2)
+[?2004l[?2004h> P5=(-0.7,-1.0,-0.3)
+[?2004l[?2004h> P6=( 0.7,-1.0,-0.3)
+[?2004l[?2004h> P3a=(-0.7,1.0,-0.3)
+[?2004l[?2004h> P7a=( 0.7,1.0,-0.3)
+[?2004l[?2004h> 
+[?2004l[?2004h> def opposite_sum(center, neigh, ln=1.0):
+[?2004l[?2004h>     s=(0,0,0)
+[?2004l[?2004h>     for n in neigh: s=add(s,sub(n,center))
+[?2004l[?2004h>     return add(center,mul(unit(neg(s)),ln))
+[?2004l[?2004h> 
+[?2004l[?2004h> H4=opposite_sum(P4,[P8,P3a,P5],0.8)
+[?2004l[?2004h> H7=opposite_sum(P7,[P8,P7a,P6],0.8)
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nC4 priority C8>C3a>C5>H:', rs(P4,[('C8',P8,1),('C3a',P3a,2),('C5',P5,3),('H',H4,4)]))
+[?2004l[?2004h> print('C7 priority C8>C7a>C6>H:', rs(P7,[('C8',P8,1),('C7a',P7a,2),('C6',P6,3),('H',H7,4)]))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Endo: C1/C3 toward front (-y). Exo: toward back (+y)
+[?2004l[?2004h> for mode in ['endo','exo']:
+[?2004l[?2004h>     if mode=='endo':
+[?2004l[?2004h>         C1=(-0.9,-0.2,-0.8)
+[?2004l[?2004h>         C3=( 0.9,-0.2,-0.8)
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         C1=(-0.9, 1.8,-0.8)
+[?2004l[?2004h>         C3=( 0.9, 1.8,-0.8)
+[?2004l[?2004h>     H3a=opposite_sum(P3a,[P4,P7a,C1],0.8)
+[?2004l[?2004h>     H7a=opposite_sum(P7a,[P7,P3a,C3],0.8)
+[?2004l[?2004h>     # Potential priority orders at C3a: carbonyl (1) > other ring junction (2) > bridgehead (3) > H (4)
+[?2004l[?2004h>     d3a=rs(P3a,[('C1',C1,1),('C7a',P7a,2),('C4',P4,3),('H',H3a,4)])
+[?2004l[?2004h>     d7a=rs(P7a,[('C3',C3,1),('C3a',P3a,2),('C7',P7,3),('H',H7a,4)])
+[?2004l[?2004h>     print(mode, 'C3a with C7a>C4:', d3a, ' C7a with C3a>C7:', d7a)
+[?2004l[?2004h>     # alternative priority order at fusion carbons
+[?2004l[?2004h>     d3a2=rs(P3a,[('C1',C1,1),('C4',P4,2),('C7a',P7a,3),('H',H3a,4)])
+[?2004l[?2004h>     d7a2=rs(P7a,[('C3',C3,1),('C7',P7,2),('C3a',P3a,3),('H',H7a,4)])
+[?2004l[?2004h>     print(mode, 'C3a with C4>C7a:', d3a2, ' C7a with C7>C3a:', d7a2)
+[?2004l[?2004h> EOF
+[?2004lcalibration (known S): ('S', -1.0)
+
+C4 priority C8>C3a>C5>H: ('R', 1.5651298685941704)
+C7 priority C8>C7a>C6>H: ('S', -1.5651298685941704)
+endo C3a with C7a>C4: ('S', -0.9592715452156094)  C7a with C3a>C7: ('R', 0.9592715452156094)
+endo C3a with C4>C7a: ('R', 0.9592715452156094)  C7a with C7>C3a: ('S', -0.9592715452156094)
+exo C3a with C7a>C4: ('S', -0.9078119858327178)  C7a with C3a>C7: ('R', 0.9078119858327178)
+exo C3a with C4>C7a: ('R', 0.9078119858327178)  C7a with C7>C3a: ('S', -0.9078119858327178)
+[?2004hroot@976c7b1f9f84:/app# 

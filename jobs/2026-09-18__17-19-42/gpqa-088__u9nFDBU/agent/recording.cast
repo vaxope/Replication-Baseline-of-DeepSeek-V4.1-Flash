@@ -1,0 +1,12 @@
+{"version": 2, "width": 160, "height": 40, "timestamp": 1789772090, "env": {"SHELL": "/bin/bash", "TERM": "tmux-256color"}}
+[0.005226, "o", "\u001b[?2004hroot@c24532a6e1a1:/app# "]
+[0.945335, "i", "clear\r"]
+[0.945599, "o", "clear\r\n\u001b[?2004l\r"]
+[0.946563, "o", "\u001b[H\u001b[J\u001b[3J"]
+[0.946732, "o", "\u001b[?2004hroot@c24532a6e1a1:/app# "]
+[292.278196, "i", "echo -n \"A\" > /app/answer.txt\n"]
+[292.278535, "o", "echo -n \"A\" > /app/answer.txt\r\n\u001b[?2004l\r"]
+[292.278897, "o", "\u001b[?2004hroot@c24532a6e1a1:/app# "]
+[490.762193, "i", "python3 -c \"import rdkit; print('rdkit available')\" 2>/dev/null || echo 'rdkit unavailable'\n"]
+[490.762526, "o", "python3 -c \"import rdkit; print('rdkit available')\" 2>/dev/null || echo 'rdkit unavailable'\r\n\u001b[?2004l\r"]
+[490.774031, "o", "rdkit unavailable\r\n\u001b[?2004hroot@c24532a6e1a1:/app# "]

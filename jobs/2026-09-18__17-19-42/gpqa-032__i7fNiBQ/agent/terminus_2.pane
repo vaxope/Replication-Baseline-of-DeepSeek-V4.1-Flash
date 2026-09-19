@@ -1,0 +1,92 @@
+[?2004hroot@e23036cce9e0:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@e23036cce9e0:/app# clear
+[?2004l[H[J[3J[?2004hroot@e23036cce9e0:/app# python3 -c "import rdkit; print(rdkit.__version__)"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'rdkit'
+[?2004hroot@e23036cce9e0:/app# which obabel || which babel || python3 -c "import openbabel; print('openbabel available')"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'openbabel'
+[?2004hroot@e23036cce9e0:/app# python3 -c "import numpy, scipy; print('numpy', numpy.__version__); print('scipy', scipy.__version__)"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'numpy'
+[?2004hroot@e23036cce9e0:/app# python3 <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return (a[0]-b[0], a[1]-b[1], a[2]-b[2])
+[?2004l[?2004h> def add(a,b): return (a[0]+b[0], a[1]+b[1], a[2]+b[2])
+[?2004l[?2004h> def mul(a,s): return (a[0]*s, a[1]*s, a[2]*s)
+[?2004l[?2004h> def dot(a,b): return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=math.sqrt(dot(a,a)); return (a[0]/n,a[1]/n,a[2]/n)
+[?2004l[?2004h> def rs(c, prio):
+[?2004l[?2004h>     v=[sub(x,c) for x in prio]
+[?2004l[?2004h>     vol=dot(cross(sub(v[0],v[3]), sub(v[1],v[3])), sub(v[2],v[3]))
+[?2004l[?2004h>     return 'S' if vol>0 else 'R'
+[?2004l[?2004h> 
+[?2004l[?2004h> # idealized norbornane coordinates
+[?2004l[?2004h> A=(-0.99,0.0,0.0)   # C4
+[?2004l[?2004h> B=(0.99,0.0,0.0)    # C7
+[?2004l[?2004h> G=(0.0,0.0,1.18)    # S bridge
+[?2004l[?2004h> C=(-0.77,1.257,-0.862) # C3a
+[?2004l[?2004h> D=(0.77,1.257,-0.862)  # C7a
+[?2004l[?2004h> E=(-0.77,-1.257,-0.862) # C5
+[?2004l[?2004h> F=(0.77,-1.257,-0.862) # C6
+[?2004l[?2004h> 
+[?2004l[?2004h> # tetrahedral remaining directions at C and D, two choices
+[?2004l[?2004h> uC_A=unit(sub(A,C)); uC_D=unit(sub(D,C))
+[?2004l[?2004h> uD_B=unit(sub(B,D)); uD_C=unit(sub(C,D))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Solve equal-dot directions x: x.uA=x.uD=-1/3, unit, chooses two z values.
+[?2004l[?2004h> def missing_dirs(u1,u2):
+[?2004l[?2004h>     # brute force angular scan on unit sphere and select best score
+[?2004l[?2004h>     best=[]
+[?2004l[?2004h>     for i in range(200):
+[?2004l[?2004h>         th=math.pi*i/199
+[?2004l[?2004h>         for j in range(400):
+[?2004l[?2004h>             ph=2*math.pi*j/399
+[?2004l[?2004h>             x=(math.sin(th)*math.cos(ph), math.sin(th)*math.sin(ph), math.cos(th))
+[?2004l[?2004h>             score=abs(dot(x,u1)+1/3)+abs(dot(x,u2)+1/3)
+[?2004l[?2004h>             best.append((score,x))
+[?2004l[?2004h>     best.sort(key=lambda t:t[0])
+[?2004l[?2004h>     # pick two distinct directions, one with max z and one with min z
+[?2004l[?2004h>     cand=[x for s,x in best if s<0.02]
+[?2004l[?2004h>     return max(cand,key=lambda x:x[2]), min(cand,key=lambda x:x[2])
+[?2004l[?2004h> 
+[?2004l[?2004h> x_exo_C,x_endo_C=missing_dirs(uC_A,uC_D)
+[?2004l[?2004h> x_exo_D,x_endo_D=missing_dirs(uD_B,uD_C)
+[?2004l[?2004h> print('dirs C exo/endo',x_exo_C,x_endo_C)
+[?2004l[?2004h> print('dirs D exo/endo',x_exo_D,x_endo_D)
+[?2004l[?2004h> 
+[?2004l[?2004h> # methyl directions at A and B, opposite sum of other three bonds
+[?2004l[?2004h> m_A=mul(unit(add(add(unit(sub(G,A)),unit(sub(C,A))),unit(sub(E,A)))),-1)
+[?2004l[?2004h> m_B=mul(unit(add(add(unit(sub(G,B)),unit(sub(D,B))),unit(sub(F,B)))),-1)
+[?2004l[?2004h> 
+[?2004l[?2004h> for mode in ['exo','endo']:
+[?2004l[?2004h>     xC = x_exo_C if mode=='exo' else x_endo_C
+[?2004l[?2004h>     xD = x_exo_D if mode=='exo' else x_endo_D
+[?2004l[?2004h>     C1=add(C,mul(xC,1.5))  # carbonyl carbon at C3a
+[?2004l[?2004h>     C3=add(D,mul(xD,1.5))  # carbonyl carbon at C7a
+[?2004l[?2004h>     # H at opposite missing direction
+[?2004l[?2004h>     hC = sub(mul(add(uC_A,uC_D),-1), xC)
+[?2004l[?2004h>     hD = sub(mul(add(uD_B,uD_C),-1), xD)
+[?2004l[?2004h>     H_C=add(C,hC); H_D=add(D,hD)
+[?2004l[?2004h>     # CIP priorities (based on substituent atom types)
+[?2004l[?2004h>     c3a_prio=[A,C1,D,H_C]
+[?2004l[?2004h>     c7a_prio=[B,C3,C,H_D]
+[?2004l[?2004h>     c4_prio=[G,C,E,add(A,mul(m_A,1.5))]
+[?2004l[?2004h>     c7_prio=[G,D,F,add(B,mul(m_B,1.5))]
+[?2004l[?2004h>     labels=(rs(C,c3a_prio),rs(D,c7a_prio),rs(A,c4_prio),rs(B,c7_prio))
+[?2004l[?2004h>     print(mode,'C3a,C7a,C4,C7 =',labels)
+[?2004l[?2004h> PY
+[?2004ldirs C exo/endo (-0.33432339978729814, 0.7960256389611199, 0.5045503408691775) (-0.3280362052502034, -0.17090164543598474, -0.9290774325277303)
+dirs D exo/endo (0.3280454616275152, 0.7986332879578633, 0.5045503408691775) (0.32937164560097765, -0.16831352720974205, -0.9290774325277303)
+exo C3a,C7a,C4,C7 = ('R', 'S', 'R', 'S')
+endo C3a,C7a,C4,C7 = ('S', 'R', 'R', 'S')
+[?2004hroot@e23036cce9e0:/app# echo -n "D" > /app/answer.txt
+[?2004l[?2004hroot@e23036cce9e0:/app# 

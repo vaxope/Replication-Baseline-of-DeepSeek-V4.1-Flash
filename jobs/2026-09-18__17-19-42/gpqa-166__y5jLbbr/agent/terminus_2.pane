@@ -1,0 +1,8 @@
+[?2004hroot@14ef4573a039:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@14ef4573a039:/app# clear
+[?2004l[H[J[3J[?2004hroot@14ef4573a039:/app# python3 -c 'import math; a=0.5; r=math.exp(-2*a*a); n=a*a*(1+r)/(1-r); vx=n+0.5+a*a; vp=n+0.5-a*a; nu=math.sqrt(vx*vp); S=(nu+0.5)*math.log(nu+0.5)-(nu-0.5)*math.log(nu-0.5); print(r,n,vx,vp,nu,S)'
+[?2004l0.6065306597126334 1.0207470412683992 1.7707470412683992 1.2707470412683992 1.5000571867520884 1.3863339991383083
+[?2004hroot@14ef4573a039:/app# echo -n "A" > /app/answer.txt
+[?2004l[?2004hroot@14ef4573a039:/app# 

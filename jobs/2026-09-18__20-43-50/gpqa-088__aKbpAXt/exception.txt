@@ -1,0 +1,164 @@
+Traceback (most recent call last):
+  File "C:\Python314\Lib\asyncio\tasks.py", line 488, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\agents\terminus_2\terminus_2.py", line 1743, in run
+    await self._run_agent_loop(
+    ...<3 lines>...
+    )
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\agents\terminus_2\terminus_2.py", line 1410, in _run_agent_loop
+    ) = await self._handle_llm_interaction(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        chat, prompt, original_instruction, self._session
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\agents\terminus_2\terminus_2.py", line 1288, in _handle_llm_interaction
+    llm_response = await self._query_llm(
+                   ^^^^^^^^^^^^^^^^^^^^^^
+        chat, prompt, original_instruction, session
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 193, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 112, in __call__
+    do = await self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 157, in iter
+    result = await action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\_utils.py", line 111, in inner
+    return call(*args, **kwargs)
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\__init__.py", line 393, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Python314\Lib\concurrent\futures\_base.py", line 447, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "C:\Python314\Lib\concurrent\futures\_base.py", line 396, in __get_result
+    raise self._exception
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 116, in __call__
+    result = await fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\agents\terminus_2\terminus_2.py", line 1128, in _query_llm
+    llm_response = await chat.chat(
+                   ^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\llms\chat.py", line 89, in chat
+    llm_response: LLMResponse = await self._model.call(
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 193, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 112, in __call__
+    do = await self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 157, in iter
+    result = await action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\_utils.py", line 111, in inner
+    return call(*args, **kwargs)
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\__init__.py", line 393, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Python314\Lib\concurrent\futures\_base.py", line 447, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "C:\Python314\Lib\concurrent\futures\_base.py", line 396, in __get_result
+    raise self._exception
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 116, in __call__
+    result = await fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\llms\lite_llm.py", line 370, in call
+    response = await litellm.acompletion(**completion_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\litellm\utils.py", line 1872, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\litellm\main.py", line 648, in acompletion
+    response = await _resolve_dispatched_chat_response(init_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\litellm\main.py", line 713, in _resolve_dispatched_chat_response
+    return await pending
+           ^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\litellm\llms\custom_httpx\llm_http_handler.py", line 448, in async_completion
+    response: Final = await self._make_common_async_call(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\litellm\llms\custom_httpx\llm_http_handler.py", line 334, in _make_common_async_call
+    response = await async_httpx_client.post(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\litellm\litellm_core_utils\logging_utils.py", line 336, in async_wrapper
+    result: Final = await func(*args, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\litellm\llms\custom_httpx\http_handler.py", line 706, in post
+    response: Final = await self.client.send(req, stream=stream)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\httpx\_client.py", line 1643, in send
+    raise exc
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\httpx\_client.py", line 1637, in send
+    await response.aread()
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\httpx\_models.py", line 979, in aread
+    self._content = b"".join([part async for part in self.aiter_bytes()])
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\httpx\_models.py", line 997, in aiter_bytes
+    async for raw_bytes in self.aiter_raw():
+    ...<2 lines>...
+            yield chunk
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\httpx\_models.py", line 1055, in aiter_raw
+    async for raw_stream_bytes in self.stream:
+    ...<2 lines>...
+            yield chunk
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\httpx\_client.py", line 176, in __aiter__
+    async for chunk in self._stream:
+        yield chunk
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\litellm\llms\custom_httpx\aiohttp_transport.py", line 119, in __aiter__
+    async for chunk in self._aiohttp_response.content.iter_chunked(self.CHUNK_SIZE):
+        yield chunk
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\aiohttp\streams.py", line 46, in __anext__
+    rv = await self.read_func()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\aiohttp\streams.py", line 448, in read
+    await self._wait("read")
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\aiohttp\streams.py", line 365, in _wait
+    await waiter
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\trial\trial.py", line 554, in _run_agent_phase
+    await asyncio.wait_for(
+    ...<6 lines>...
+    )
+  File "C:\Python314\Lib\asyncio\tasks.py", line 487, in wait_for
+    async with timeouts.timeout(timeout):
+               ~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Python314\Lib\asyncio\timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\trial\single_step.py", line 77, in _run_agent
+    await self._run_agent_phase(
+    ...<5 lines>...
+    )
+  File "C:\Users\stanh\Documents\Replication Baseline of DeepSeek-V4.1-Flash\venv\Lib\site-packages\harbor\trial\trial.py", line 563, in _run_agent_phase
+    raise AgentTimeoutError(
+        f"Agent execution timed out after {timeout_sec} seconds"
+    ) from exc
+harbor.trial.errors.AgentTimeoutError: Agent execution timed out after 900.0 seconds

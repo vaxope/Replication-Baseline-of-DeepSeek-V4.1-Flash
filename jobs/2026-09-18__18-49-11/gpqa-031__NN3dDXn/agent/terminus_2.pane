@@ -1,0 +1,63 @@
+[?2004hroot@cf7f1a6975e4:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@cf7f1a6975e4:/app# clear
+[?2004l[H[J[3J[?2004hroot@cf7f1a6975e4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> beta=0.96
+[?2004l[?2004h> gamma=1/math.sqrt(1-beta*beta)
+[?2004l[?2004h> print('gamma',gamma)
+[?2004l[?2004h> uc2=931.49410242 # MeV
+[?2004l[?2004h> # masses in u
+[?2004l[?2004h> masses={
+[?2004l[?2004h>  'Li6_atom':6.015122795,
+[?2004l[?2004h>  'Li6_nucleus':6.015122795-3*0.000548579909,
+[?2004l[?2004h>  '6u':6.0,
+[?2004l[?2004h>  '3p+3n':3*1.007276466621+3*1.00866491595,
+[?2004l[?2004h>  '3p+3n+3e':3*(1.007276466621+1.00866491595+0.000548579909),
+[?2004l[?2004h>  'natural_Li':6.941,
+[?2004l[?2004h>  'Li7_atom':7.0160034366,
+[?2004l[?2004h> }
+[?2004l[?2004h> for name,m in masses.items():
+[?2004l[?2004h>     rest=m*uc2
+[?2004l[?2004h>     total=gamma*rest/1000
+[?2004l[?2004h>     kin=(gamma-1)*rest/1000
+[?2004l[?2004h>     print(f'{name:15s} m={m:.8f} u rest={rest:.3f} MeV Etot={total:.6f} GeV K={kin:.6f} GeV')
+[?2004l[?2004h> PY
+[?2004lgamma 3.571428571428571
+Li6_atom        m=6.01512279 u rest=5603.051 MeV Etot=20.010898 GeV K=14.407846 GeV
+Li6_nucleus     m=6.01347706 u rest=5601.518 MeV Etot=20.005423 GeV K=14.403904 GeV
+6u              m=6.00000000 u rest=5588.965 MeV Etot=19.960588 GeV K=14.371623 GeV
+3p+3n           m=6.04782415 u rest=5633.513 MeV Etot=20.119688 GeV K=14.486175 GeV
+3p+3n+3e        m=6.04946989 u rest=5635.046 MeV Etot=20.125163 GeV K=14.490117 GeV
+natural_Li      m=6.94100000 u rest=6465.501 MeV Etot=23.091073 GeV K=16.625573 GeV
+Li7_atom        m=7.01600344 u rest=6535.366 MeV Etot=23.340592 GeV K=16.805226 GeV
+[?2004hroot@cf7f1a6975e4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> beta=0.96
+[?2004l[?2004h> gamma=1/math.sqrt(1-beta*beta)
+[?2004l[?2004h> uc2=931.49410242 # MeV
+[?2004l[?2004h> mp=1.007276466621
+[?2004l[?2004h> mn=1.00866491595
+[?2004l[?2004h> mLi6=6.015122795
+[?2004l[?2004h> mLi6_nuc=mLi6-3*0.000548579909
+[?2004l[?2004h> masses={
+[?2004l[?2004h>  'Li6 atomic':mLi6,
+[?2004l[?2004h>  'Li6 nuclear':mLi6_nuc,
+[?2004l[?2004h>  '3p+3n free nucleons':3*mp+3*mn,
+[?2004l[?2004h>  '6 neutrons':6*mn,
+[?2004l[?2004h>  '6 atomic mass units':6.0,
+[?2004l[?2004h> }
+[?2004l[?2004h> for name,m in masses.items():
+[?2004l[?2004h>     E=gamma*m*uc2/1000
+[?2004l[?2004h>     print(f'{name:28s}: {E:.6f} GeV')
+[?2004l[?2004h> print('options: A 23.069  B 21.419  C 18.475  D 20.132')
+[?2004l[?2004h> PY
+[?2004lLi6 atomic                  : 20.010898 GeV
+Li6 nuclear                 : 20.005423 GeV
+3p+3n free nucleons         : 20.119688 GeV
+6 neutrons                  : 20.133545 GeV
+6 atomic mass units         : 19.960588 GeV
+options: A 23.069  B 21.419  C 18.475  D 20.132
+[?2004hroot@cf7f1a6975e4:/app# echo -n "D" > /app/answer.txt
+[?2004l[?2004hroot@cf7f1a6975e4:/app# 

@@ -1,0 +1,129 @@
+[?2004hroot@411a176078f8:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@411a176078f8:/app# clear
+[?2004l[H[J[3J[?2004hroot@411a176078f8:/app# python3 -c "import rdkit; print('rdkit', rdkit.__version__)"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'rdkit'
+[?2004hroot@411a176078f8:/app# command -v obabel || command -v babel || true
+[?2004l[?2004hroot@411a176078f8:/app# echo -n 'C' > /app/answer.txt
+[?2004l[?2004hroot@411a176078f8:/app# python3 - <<'PY'
+[?2004l[?2004h> import numpy as np
+[?2004l[?2004h> 
+[?2004l[?2004h> def chirality(center, p1, p2, p3, p4):
+[?2004l[?2004h>     # p4 is lowest priority. Compute signed volume for priorities 1,2,3,4.
+[?2004l[?2004h>     v1=np.array(p1)-np.array(p4)
+[?2004l[?2004h>     v2=np.array(p2)-np.array(p4)
+[?2004l[?2004h>     v3=np.array(p3)-np.array(p4)
+[?2004l[?2004h>     det=np.linalg.det(np.array([v1,v2,v3]))
+[?2004l[?2004h>     # Earlier test: det>0 means S, det<0 means R (for this convention).
+[?2004l[?2004h>     return 'S' if det>0 else 'R', det
+[?2004l[?2004h> 
+[?2004l[?2004h> # Simplified planar ring coordinates
+[?2004l[?2004h> C1=np.array([0,1,0])
+[?2004l[?2004h> C2=np.array([-1,0.5,0])
+[?2004l[?2004h> C3=np.array([-1,-0.5,0])
+[?2004l[?2004h> C4=np.array([0,-1,0])
+[?2004l[?2004h> C5=np.array([1,-0.5,0])
+[?2004l[?2004h> C6=np.array([1,0.5,0])
+[?2004l[?2004h> 
+[?2004l[?2004h> # +z = same face (methyl above); -z = other face
+[?2004l[?2004h> for label, z5, z6 in [('cis methyls (both above)', 1.0, 1.0),
+[?2004l[?2004h>                       ('trans methyls (opposite faces)', 1.0, -1.0)]:
+[?2004l[?2004h>     # At C5 priorities: C6 > C4 > Cmethyl > H
+[?2004l[?2004h>     p1=C6; p2=C4; p3=C5+np.array([0,0,z5]); p4=C5+np.array([0,0,-z5])
+[?2004l[?2004h>     c5, d5 = chirality(C5, p1, p2, p3, p4)
+[?2004l[?2004h>     # At C6 priorities: C1 > C5 > Cmethyl > H
+[?2004l[?2004h>     p1=C1; p2=C5; p3=C6+np.array([0,0,z6]); p4=C6+np.array([0,0,-z6])
+[?2004l[?2004h>     c6, d6 = chirality(C6, p1, p2, p3, p4)
+[?2004l[?2004h>     print(label, '=> C5', c5, 'C6', c6, '(dets', d5, d6, ')')
+[?2004l[?2004h> PY
+[?2004lTraceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ModuleNotFoundError: No module named 'numpy'
+[?2004hroot@411a176078f8:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> SQ3=math.sqrt(3.0)
+[?2004l[?2004h> h=1.0/(4.0*math.sqrt(2.0))
+[?2004l[?2004h> # ideal chair coordinates
+[?2004l[?2004h> C={
+[?2004l[?2004h>  1:(1,0,h), 2:(0.5,SQ3/2,-h), 3:(-0.5,SQ3/2,h),
+[?2004l[?2004h>  4:(-1,0,-h), 5:(-0.5,-SQ3/2,h), 6:(0.5,-SQ3/2,-h)
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return (a[0]-b[0],a[1]-b[1],a[2]-b[2])
+[?2004l[?2004h> def add(a,b): return (a[0]+b[0],a[1]+b[1],a[2]+b[2])
+[?2004l[?2004h> def mul(a,s): return (a[0]*s,a[1]*s,a[2]*s)
+[?2004l[?2004h> def dot(a,b): return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a):
+[?2004l[?2004h>     l=math.sqrt(dot(a,a)); return (a[0]/l,a[1]/l,a[2]/l)
+[?2004l[?2004h> 
+[?2004l[?2004h> def subst_dirs(center, n1, n2):
+[?2004l[?2004h>     a=norm(sub(C[n1],center)); b=norm(sub(C[n2],center))
+[?2004l[?2004h>     u=add(a,b); c=dot(a,b)
+[?2004l[?2004h>     n=cross(a,b); n=norm(n)
+[?2004l[?2004h>     q=mul(n, math.sqrt((1-c)/2.0))
+[?2004l[?2004h>     x=add(mul(u,-0.5), q)
+[?2004l[?2004h>     y=add(mul(u,-0.5), mul(q,-1))
+[?2004l[?2004h>     return x,y
+[?2004l[?2004h> 
+[?2004l[?2004h> def det3(a,b,c):
+[?2004l[?2004h>     return (a[0]*(b[1]*c[2]-b[2]*c[1])
+[?2004l[?2004h>            -a[1]*(b[0]*c[2]-b[2]*c[0])
+[?2004l[?2004h>            +a[2]*(b[0]*c[1]-b[1]*c[0]))
+[?2004l[?2004h> 
+[?2004l[?2004h> def chirality(center, p1, p2, p3, p4):
+[?2004l[?2004h>     v1=sub(p1,p4); v2=sub(p2,p4); v3=sub(p3,p4)
+[?2004l[?2004h>     d=det3(v1,v2,v3)
+[?2004l[?2004h>     return ('S' if d>0 else 'R'), d
+[?2004l[?2004h> 
+[?2004l[?2004h> for methyl_z_sign in (1,-1):
+[?2004l[?2004h>     dirs5=subst_dirs(C[5],4,6)
+[?2004l[?2004h>     dirs6=subst_dirs(C[6],1,5)
+[?2004l[?2004h>     # choose the substituent direction with desired global z sign as methyl
+[?2004l[?2004h>     me5=dirs5[0] if dirs5[0][2]*methyl_z_sign>0 else dirs5[1]
+[?2004l[?2004h>     h5=dirs5[1] if me5 is dirs5[0] else dirs5[0]
+[?2004l[?2004h>     me6=dirs6[0] if dirs6[0][2]*methyl_z_sign>0 else dirs6[1]
+[?2004l[?2004h>     h6=dirs6[1] if me6 is dirs6[0] else dirs6[0]
+[?2004l[?2004h>     # atom positions
+[?2004l[?2004h>     Pme5=add(C[5], mul(me5,1.5)); Ph5=add(C[5], mul(h5,1.0))
+[?2004l[?2004h>     Pme6=add(C[6], mul(me6,1.5)); Ph6=add(C[6], mul(h6,1.0))
+[?2004l[?2004h>     # C5 priorities: 1=C6,2=C4,3=Me,4=H
+[?2004l[?2004h>     c5,d5=chirality(C[5], C[6], C[4], Pme5, Ph5)
+[?2004l[?2004h>     # C6 priorities: 1=C1,2=C5,3=Me,4=H
+[?2004l[?2004h>     c6,d6=chirality(C[6], C[1], C[5], Pme6, Ph6)
+[?2004l[?2004h>     print('methyls z-sign', methyl_z_sign, 'C5',c5,'C6',c6,'dets',round(d5,3),round(d6,3))
+[?2004l[?2004h> PY
+[?2004lmethyls z-sign 1 C5 S C6 S dets 4.615 4.615
+methyls z-sign -1 C5 R C6 R dets -4.615 -4.615
+[?2004hroot@411a176078f8:/app# python3 - <<'PY'
+[?2004l[?2004h> # planar regular hexagon with substituents above/below ring plane
+[?2004l[?2004h> def sub(a,b): return (a[0]-b[0], a[1]-b[1], a[2]-b[2])
+[?2004l[?2004h> def dot(a,b): return sum(x*y for x,y in zip(a,b))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def det(a,b,c): return dot(a,cross(b,c))
+[?2004l[?2004h> def assign(center,p1,p2,p3,p4):
+[?2004l[?2004h>     d=det(sub(p1,p4), sub(p2,p4), sub(p3,p4))
+[?2004l[?2004h>     return ('S' if d>0 else 'R'), d
+[?2004l[?2004h> 
+[?2004l[?2004h> C={
+[?2004l[?2004h> 1:(1,0,0), 2:(0.5,0.8660254,0),
+[?2004l[?2004h> 3:(-0.5,0.8660254,0), 4:(-1,0,0),
+[?2004l[?2004h> 5:(-0.5,-0.8660254,0), 6:(0.5,-0.8660254,0)
+[?2004l[?2004h> }
+[?2004l[?2004h> for label, z in [('cis both methyls above', 1), ('trans C5 above C6 below', -1)]:
+[?2004l[?2004h>     me5=(C[5][0], C[5][1], 1*z); h5=(C[5][0], C[5][1], -1*z)
+[?2004l[?2004h>     me6=(C[6][0], C[6][1], 1)   # for trans, C6 below
+[?2004l[?2004h>     h6=(C[6][0], C[6][1], -1)
+[?2004l[?2004h>     # C5 priorities: 1=C6, 2=C4, 3=Me, 4=H
+[?2004l[?2004h>     c5,d5=assign(C[5], C[6], C[4], me5, h5)
+[?2004l[?2004h>     # C6 priorities: 1=C1, 2=C5, 3=Me, 4=H
+[?2004l[?2004h>     c6,d6=assign(C[6], C[1], C[5], me6, h6)
+[?2004l[?2004h>     print(label, 'C5',c5,round(d5,4),'C6',c6,round(d6,4))
+[?2004l[?2004h> PY
+[?2004lcis both methyls above C5 S 1.7321 C6 S 1.7321
+trans C5 above C6 below C5 R -1.7321 C6 S 1.7321
+[?2004hroot@411a176078f8:/app# 

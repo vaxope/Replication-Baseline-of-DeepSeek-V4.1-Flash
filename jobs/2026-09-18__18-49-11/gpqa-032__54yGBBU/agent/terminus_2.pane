@@ -1,0 +1,402 @@
+[?2004hroot@1c6fa0b78581:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@1c6fa0b78581:/app# clear
+[?2004l[H[J[3J[?2004hroot@1c6fa0b78581:/app# python3 -c "import rdkit; print('rdkit', rdkit.__version__)" 2>/dev/null || echo no-rdkit
+[?2004lno-rdkit
+[?2004hroot@1c6fa0b78581:/app# which obabel || echo no-obabel
+[?2004lno-obabel
+[?2004hroot@1c6fa0b78581:/app# python3 - <<'PY'
+[?2004l[?2004h> try:
+[?2004l[?2004h>     import numpy
+[?2004l[?2004h>     print('numpy', numpy.__version__)
+[?2004l[?2004h> except Exception as e:
+[?2004l[?2004h>     print('no numpy', e)
+[?2004l[?2004h> try:
+[?2004l[?2004h>     import scipy
+[?2004l[?2004h>     print('scipy', scipy.__version__)
+[?2004l[?2004h> except Exception as e:
+[?2004l[?2004h>     print('no scipy', e)
+[?2004l[?2004h> PY
+[?2004lno numpy No module named 'numpy'
+no scipy No module named 'scipy'
+[?2004hroot@1c6fa0b78581:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(p,q): return tuple(a-b for a,b in zip(p,q))
+[?2004l[?2004h> def cross(u,v): return (u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0])
+[?2004l[?2004h> def dot(u,v): return sum(a*b for a,b in zip(u,v))
+[?2004l[?2004h> def det(u,v,w): return dot(u,cross(v,w))
+[?2004l[?2004h> def norm(u): return math.sqrt(dot(u,u))
+[?2004l[?2004h> def unit(u):
+[?2004l[?2004h>     n=norm(u); return tuple(a/n for a in u)
+[?2004l[?2004h> 
+[?2004l[?2004h> def config(center, p1,p2,p3,p4):
+[?2004l[?2004h>     # p4 lowest priority; return R/S using det sign convention calibrated for CIP
+[?2004l[?2004h>     d=det(sub(p1,center), sub(p2,center), sub(p3,center)) if False else None
+[?2004l[?2004h>     # vectors from lowest-priority atom to the other three
+[?2004l[?2004h>     v1=sub(p1,p4); v2=sub(p2,p4); v3=sub(p3,p4)
+[?2004l[?2004h>     D=det(v1,v2,v3)
+[?2004l[?2004h>     # With p4 pointing away, 1->2->3 clockwise gives det<0 and R.
+[?2004l[?2004h>     return 'R' if D<0 else 'S', D
+[?2004l[?2004h> 
+[?2004l[?2004h> # Core coordinates
+[?2004l[?2004h> A=(-1.2,0.0,0.5)   # C4, original thiophene carbon
+[?2004l[?2004h> D=(1.2,0.0,0.5)    # C7
+[?2004l[?2004h> S=(0.0,0.0,1.8)     # sulfur bridge
+[?2004l[?2004h> B=(-0.8,-1.2,-0.5)  # alkene bridge carbon adjacent A
+[?2004l[?2004h> C=(0.8,-1.2,-0.5)   # alkene bridge carbon adjacent D
+[?2004l[?2004h> E=(-0.8,1.2,-0.5)   # anhydride-bearing bridge carbon adjacent A
+[?2004l[?2004h> F=(0.8,1.2,-0.5)    # anhydride-bearing bridge carbon adjacent D
+[?2004l[?2004h> 
+[?2004l[?2004h> # Fourth tetrahedral direction at A (methyl) and D
+[?2004l[?2004h> sumA=tuple(a+b+c for a,b,c in zip(unit(sub(S,A)), unit(sub(B,A)), unit(sub(E,A))))
+[?2004l[?2004h> # The fourth bond is opposite the sum of the other three unit vectors
+[?2004l[?2004h> MeA=tuple(A[i]-1.2*sumA[i] for i in range(3))
+[?2004l[?2004h> sumD=tuple(a+b+c for a,b,c in zip(unit(sub(S,D)), unit(sub(C,D)), unit(sub(F,D))))
+[?2004l[?2004h> MeD=tuple(D[i]-1.2*sumD[i] for i in range(3))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('MeA',MeA,'MeD',MeD)
+[?2004l[?2004h> # Priorities A: 1=S,2=E,3=B,4=MeA
+[?2004l[?2004h> print('A config', config(A,S,E,B,MeA))
+[?2004l[?2004h> # Priorities D: 1=S,2=F,3=C,4=MeD
+[?2004l[?2004h> print('D config', config(D,S,F,C,MeD))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Now model E/F stereocenters.  Need approximate positions for carbonyls on exo or endo face.
+[?2004l[?2004h> # Keep E/F positions; create C1/C3 roughly by adding tetrahedral directions from E/F, with exo toward S side (+z) or endo opposite (-z).
+[?2004l[?2004h> # Exo orientation: carbonyls project to +z side of E-F bridge.
+[?2004l[?2004h> # We'll construct simple points using directions from E to A and E to F, then choose C1 direction with positive z component.
+[?2004l[?2004h> # Formal priorities E: 1=A, 2=C1, 3=F, 4=H; F: 1=D, 2=C3, 3=E, 4=H.
+[?2004l[?2004h> for mode,sgn in [('exo',1),('endo',-1)]:
+[?2004l[?2004h>     # crude out-of-plane direction perpendicular to E-F and core local plane
+[?2004l[?2004h>     # Use vector E->A and E->F.
+[?2004l[?2004h>     uA=unit(sub(A,E)); uF=unit(sub(F,E))
+[?2004l[?2004h>     # normalized approximate fourth direction to put carbonyl on chosen face
+[?2004l[?2004h>     # take sum of E->A and E->F and tilt by chosen z
+[?2004l[?2004h>     c1dir=unit((uA[0]+uF[0], uA[1]+uF[1], sgn*1.2))
+[?2004l[?2004h>     C1=tuple(E[i]+1.5*c1dir[i] for i in range(3))
+[?2004l[?2004h>     uD=unit(sub(D,F)); uE=unit(sub(E,F))
+[?2004l[?2004h>     c3dir=unit((uD[0]+uE[0], uD[1]+uE[1], sgn*1.2))
+[?2004l[?2004h>     C3=tuple(F[i]+1.5*c3dir[i] for i in range(3))
+[?2004l[?2004h>     # Hydrogens as opposite sum of other three bond directions
+[?2004l[?2004h>     sumE=tuple(a+b+c for a,b,c in zip(unit(sub(A,E)), unit(sub(F,E)), unit(sub(C1,E))))
+[?2004l[?2004h>     HE=tuple(E[i]-1.0*sumE[i] for i in range(3))
+[?2004l[?2004h>     sumF=tuple(a+b+c for a,b,c in zip(unit(sub(D,F)), unit(sub(E,F)), unit(sub(C3,F))))
+[?2004l[?2004h>     HF=tuple(F[i]-1.0*sumF[i] for i in range(3))
+[?2004l[?2004h>     print(mode, 'E config', config(E,A,C1,F,HE), 'F config', config(F,D,C3,E,HF))
+[?2004l[?2004h> PY
+[?2004lMeA (-2.6093028493078796, 0.0, 1.1066526815175162) MeD (2.6093028493078796, 0.0, 1.1066526815175162)
+A config ('R', -13.072124876693126)
+D config ('S', 13.072124876693126)
+exo E config ('R', -3.0394988787807087) F config ('S', 3.0394988787807087)
+endo E config ('S', 9.541505067931864) F config ('R', -9.541505067931864)
+[?2004hroot@1c6fa0b78581:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(p,q): return tuple(a-b for a,b in zip(p,q))
+[?2004l[?2004h> def cross(u,v): return (u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0])
+[?2004l[?2004h> def dot(u,v): return sum(a*b for a,b in zip(u,v))
+[?2004l[?2004h> def det(u,v,w): return dot(u,cross(v,w))
+[?2004l[?2004h> def unit(u):
+[?2004l[?2004h>     n=math.sqrt(dot(u,u)); return tuple(a/n for a in u)
+[?2004l[?2004h> 
+[?2004l[?2004h> def config(center,p1,p2,p3,p4):
+[?2004l[?2004h>     v1=sub(p1,p4); v2=sub(p2,p4); v3=sub(p3,p4)
+[?2004l[?2004h>     D=det(v1,v2,v3)
+[?2004l[?2004h>     return 'R' if D<0 else 'S', D
+[?2004l[?2004h> 
+[?2004l[?2004h> A=(-1.2,0.0,0.5); D=(1.2,0.0,0.5); S=(0.0,0.0,1.8)
+[?2004l[?2004h> B=(-0.8,-1.2,-0.5); C=(0.8,-1.2,-0.5); E=(-0.8,1.2,-0.5); F=(0.8,1.2,-0.5)
+[?2004l[?2004h> 
+[?2004l[?2004h> sumA=tuple(a+b+c for a,b,c in zip(unit(sub(S,A)),unit(sub(B,A)),unit(sub(E,A))))
+[?2004l[?2004h> MeA=tuple(A[i]-1.2*sumA[i] for i in range(3))
+[?2004l[?2004h> sumD=tuple(a+b+c for a,b,c in zip(unit(sub(S,D)),unit(sub(C,D)),unit(sub(F,D))))
+[?2004l[?2004h> MeD=tuple(D[i]-1.2*sumD[i] for i in range(3))
+[?2004l[?2004h> print('C4 config',config(A,S,E,B,MeA)[0])
+[?2004l[?2004h> print('C7 config',config(D,S,F,C,MeD)[0])
+[?2004l[?2004h> 
+[?2004l[?2004h> for mode,sgn in [('exo',1),('endo',-1)]:
+[?2004l[?2004h>     uA=unit(sub(A,E)); uF=unit(sub(F,E))
+[?2004l[?2004h>     c1dir=unit((uA[0]+uF[0],uA[1]+uF[1],sgn*1.2))
+[?2004l[?2004h>     C1=tuple(E[i]+1.5*c1dir[i] for i in range(3))
+[?2004l[?2004h>     uD=unit(sub(D,F)); uE=unit(sub(E,F))
+[?2004l[?2004h>     c3dir=unit((uD[0]+uE[0],uD[1]+uE[1],sgn*1.2))
+[?2004l[?2004h>     C3=tuple(F[i]+1.5*c3dir[i] for i in range(3))
+[?2004l[?2004h>     sumE=tuple(a+b+c for a,b,c in zip(unit(sub(A,E)),unit(sub(F,E)),unit(sub(C1,E))))
+[?2004l[?2004h>     HE=tuple(E[i]-1.0*sumE[i] for i in range(3))
+[?2004l[?2004h>     sumF=tuple(a+b+c for a,b,c in zip(unit(sub(D,F)),unit(sub(E,F)),unit(sub(C3,F))))
+[?2004l[?2004h>     HF=tuple(F[i]-1.0*sumF[i] for i in range(3))
+[?2004l[?2004h>     # corrected CIP: C3a: 1=C1,2=C4(A),3=C7a(F),4=H
+[?2004l[?2004h>     # C7a: 1=C3,2=C7(D),3=C3a(E),4=H
+[?2004l[?2004h>     print(mode, 'C3a config', config(E,C1,A,F,HE)[0], 'C7a config', config(F,C3,D,E,HF)[0])
+[?2004l[?2004h> PY
+[?2004lC4 config R
+C7 config S
+exo C3a config S C7a config R
+endo C3a config R C7a config S
+[?2004hroot@1c6fa0b78581:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(p,q): return tuple(a-b for a,b in zip(p,q))
+[?2004l[?2004h> def cross(u,v): return (u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0])
+[?2004l[?2004h> def dot(u,v): return sum(a*b for a,b in zip(u,v))
+[?2004l[?2004h> def det(u,v,w): return dot(u,cross(v,w))
+[?2004l[?2004h> def unit(u):
+[?2004l[?2004h>     n=math.sqrt(dot(u,u)); return tuple(a/n for a in u)
+[?2004l[?2004h> 
+[?2004l[?2004h> def config(center,p1,p2,p3,p4):
+[?2004l[?2004h>     # Use vectors from the stereocenter. With lowest priority oriented away,
+[?2004l[?2004h>     # det < 0 corresponds to clockwise 1->2->3 (R).
+[?2004l[?2004h>     v1=sub(p1,center); v2=sub(p2,center); v3=sub(p3,center)
+[?2004l[?2004h>     D=det(v1,v2,v3)
+[?2004l[?2004h>     return 'R' if D<0 else 'S', D
+[?2004l[?2004h> 
+[?2004l[?2004h> # Core skeleton coordinates
+[?2004l[?2004h> A=(-1.2,0.0,0.5)   # C4
+[?2004l[?2004h> D=(1.2,0.0,0.5)    # C7
+[?2004l[?2004h> S=(0.0,0.0,1.8)     # S bridge
+[?2004l[?2004h> B=(-0.8,-1.2,-0.5)  # C5
+[?2004l[?2004h> C=(0.8,-1.2,-0.5)   # C6
+[?2004l[?2004h> E=(-0.8,1.2,-0.5)   # C3a
+[?2004l[?2004h> F=(0.8,1.2,-0.5)    # C7a
+[?2004l[?2004h> 
+[?2004l[?2004h> # Methyl groups as fourth tetrahedral directions
+[?2004l[?2004h> sumA=tuple(a+b+c for a,b,c in zip(unit(sub(S,A)),unit(sub(B,A)),unit(sub(E,A))))
+[?2004l[?2004h> MeA=tuple(A[i]-1.2*sumA[i] for i in range(3))
+[?2004l[?2004h> sumD=tuple(a+b+c for a,b,c in zip(unit(sub(S,D)),unit(sub(C,D)),unit(sub(F,D))))
+[?2004l[?2004h> MeD=tuple(D[i]-1.2*sumD[i] for i in range(3))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Priorities corrected for sulfur attachment:
+[?2004l[?2004h> # C4: 1=S, 2=C3a(E), 3=C5(B), 4=Me
+[?2004l[?2004h> # C7: 1=S, 2=C7a(F), 3=C6(C), 4=Me
+[?2004l[?2004h> print('C4',config(A,S,E,B,MeA)[0])
+[?2004l[?2004h> print('C7',config(D,S,F,C,MeD)[0])
+[?2004l[?2004h> 
+[?2004l[?2004h> for mode,sgn in [('exo_S_side',1),('endo_anti_S',-1)]:
+[?2004l[?2004h>     # Carbonyl carbon attached to C3a (E) and C7a (F)
+[?2004l[?2004h>     uA=unit(sub(A,E)); uF=unit(sub(F,E))
+[?2004l[?2004h>     c3dir=unit((uA[0]+uF[0],uA[1]+uF[1],sgn*1.2))
+[?2004l[?2004h>     C3=tuple(E[i]+1.5*c3dir[i] for i in range(3))
+[?2004l[?2004h>     uD=unit(sub(D,F)); uE=unit(sub(E,F))
+[?2004l[?2004h>     c1dir=unit((uD[0]+uE[0],uD[1]+uE[1],sgn*1.2))
+[?2004l[?2004h>     C1=tuple(F[i]+1.5*c1dir[i] for i in range(3))
+[?2004l[?2004h>     sumE=tuple(a+b+c for a,b,c in zip(unit(sub(A,E)),unit(sub(F,E)),unit(sub(C3,E))))
+[?2004l[?2004h>     HE=tuple(E[i]-1.0*sumE[i] for i in range(3))
+[?2004l[?2004h>     sumF=tuple(a+b+c for a,b,c in zip(unit(sub(D,F)),unit(sub(E,F)),unit(sub(C1,F))))
+[?2004l[?2004h>     HF=tuple(F[i]-1.0*sumF[i] for i in range(3))
+[?2004l[?2004h>     # C3a priorities: 1=C4(A), 2=carbonyl(C3), 3=C7a(F), 4=H
+[?2004l[?2004h>     # C7a priorities: 1=C7(D), 2=carbonyl(C1), 3=C3a(E), 4=H
+[?2004l[?2004h>     print(mode, 'C3a',config(E,A,C3,F,HE)[0], 'C7a',config(F,D,C1,E,HF)[0])
+[?2004l[?2004h> PY
+[?2004lC4 R
+C7 S
+exo_S_side C3a R C7a S
+endo_anti_S C3a S C7a R
+[?2004hroot@1c6fa0b78581:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(p,q): return tuple(a-b for a,b in zip(p,q))
+[?2004l[?2004h> def cross(u,v): return (u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0])
+[?2004l[?2004h> def dot(u,v): return sum(a*b for a,b in zip(u,v))
+[?2004l[?2004h> def det(u,v,w): return dot(u,cross(v,w))
+[?2004l[?2004h> def unit(u):
+[?2004l[?2004h>     n=math.sqrt(dot(u,u)); return tuple(a/n for a in u)
+[?2004l[?2004h> def config(center,p1,p2,p3,p4):
+[?2004l[?2004h>     v1=sub(p1,center); v2=sub(p2,center); v3=sub(p3,center)
+[?2004l[?2004h>     D=det(v1,v2,v3)
+[?2004l[?2004h>     return 'R' if D<0 else 'S'
+[?2004l[?2004h> 
+[?2004l[?2004h> # Mirror-symmetric core: A/D bridgeheads; S one-atom bridge (+z); B=C alkene bridge and E-F anhydride bridge both below (-z).
+[?2004l[?2004h> A=(-0.8,0.0,0.0); D=(0.8,0.0,0.0); S=(0.0,0.0,1.0)
+[?2004l[?2004h> B=(-0.5,-0.8,-0.5); C=(0.5,-0.8,-0.5)
+[?2004l[?2004h> E=(-0.5,0.8,-0.5); F=(0.5,0.8,-0.5)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Methyl as fourth tetrahedral bond at A (negative sum of ring bond directions)
+[?2004l[?2004h> sumA=tuple(a+b+c for a,b,c in zip(unit(sub(S,A)),unit(sub(B,A)),unit(sub(E,A))))
+[?2004l[?2004h> MeA=tuple(A[i]-1.0*sumA[i] for i in range(3))
+[?2004l[?2004h> sumD=tuple(a+b+c for a,b,c in zip(unit(sub(S,D)),unit(sub(C,D)),unit(sub(F,D))))
+[?2004l[?2004h> MeD=tuple(D[i]-1.0*sumD[i] for i in range(3))
+[?2004l[?2004h> print('MeA z',MeA[2],'MeD z',MeD[2])
+[?2004l[?2004h> print('C4 config',config(A,S,E,B,MeA))
+[?2004l[?2004h> print('C7 config',config(D,S,F,C,MeD))
+[?2004l[?2004h> 
+[?2004l[?2004h> for face,sgn in [('same_face_as_S_exo',1),('opposite_face_endo',-1)]:
+[?2004l[?2004h>     # carbonyl carbons approximate, perpendicular to E-F and on chosen z face
+[?2004l[?2004h>     C1=tuple(E[i]+(0.0,0.0,sgn*1.2)[i] for i in range(3))
+[?2004l[?2004h>     C3=tuple(F[i]+(0.0,0.0,sgn*1.2)[i] for i in range(3))
+[?2004l[?2004h>     sumE=tuple(a+b+c for a,b,c in zip(unit(sub(A,E)),unit(sub(F,E)),unit(sub(C1,E))))
+[?2004l[?2004h>     HE=tuple(E[i]-1.0*sumE[i] for i in range(3))
+[?2004l[?2004h>     sumF=tuple(a+b+c for a,b,c in zip(unit(sub(D,F)),unit(sub(E,F)),unit(sub(C3,F))))
+[?2004l[?2004h>     HF=tuple(F[i]-1.0*sumF[i] for i in range(3))
+[?2004l[?2004h>     # Priorities C3a: 1=C4(A),2=C1(carbonyl),3=C7a(F),4=H; C7a: 1=C7(D),2=C3,3=C3a(E),4=H
+[?2004l[?2004h>     print(face,'C3a',config(E,A,C1,F,HE),'C7a',config(F,D,C3,E,HF))
+[?2004l[?2004h> PY
+[?2004lMeA z 0.22928373510918032 MeD z 0.22928373510918032
+C4 config R
+C7 config S
+same_face_as_S_exo C3a R C7a S
+opposite_face_endo C3a S C7a R
+[?2004hroot@1c6fa0b78581:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> K=2*math.sqrt(2)/3
+[?2004l[?2004h> best=[]
+[?2004l[?2004h> for theta_deg in range(0,181,5):
+[?2004l[?2004h>     th=math.radians(theta_deg)
+[?2004l[?2004h>     alpha=math.sin(th)  # u_AS x component
+[?2004l[?2004h>     gamma=math.cos(th)  # u_AS z component
+[?2004l[?2004h>     if alpha<=0 or gamma<=0: continue
+[?2004l[?2004h>     e1=(gamma,0,-alpha)
+[?2004l[?2004h>     for phi_deg in range(-180,181,5):
+[?2004l[?2004h>         ph=math.radians(phi_deg)
+[?2004l[?2004h>         def u(phi):
+[?2004l[?2004h>             return (-alpha/3 + K*gamma*math.cos(phi), K*math.sin(phi), -gamma/3 - K*alpha*math.cos(phi))
+[?2004l[?2004h>         u1=u(ph); u2=u(ph-math.radians(120))
+[?2004l[?2004h>         # both ring bond x components should be positive inward, y not too huge
+[?2004l[?2004h>         if u1[0]>0 and u2[0]>0 and abs(u1[1])<0.75 and abs(u2[1])<0.75:
+[?2004l[?2004h>             # score favors moderate y and x inward
+[?2004l[?2004h>             score=abs(u1[1])+abs(u2[1]) - 0.5*(u1[0]+u2[0])
+[?2004l[?2004h>             best.append((score,theta_deg,phi_deg,u1,u2))
+[?2004l[?2004h> best.sort()
+[?2004l[?2004h> for row in best[:10]:
+[?2004l[?2004h>     score,th,ph,u1,u2=row
+[?2004l[?2004h>     print('theta',th,'phi',ph,'u1',tuple(round(x,3) for x in u1),'u2',tuple(round(x,3) for x in u2),'score',round(score,3))
+[?2004l[?2004h> print('count',len(best))
+[?2004l[?2004h> PY
+[?2004lcount 0
+[?2004hroot@1c6fa0b78581:/app# python3 - <<'PY'
+[?2004l[?2004h> import math, random
+[?2004l[?2004h> 
+[?2004lE[?2004h> atoms=['A','D','S','B','C','E','F']
+[?2004l[?2004h> idx={a:i for i,a in enumerate(atoms)}
+[?2004l[?2004h> # starting coords
+[?2004l[?2004h> start={
+[?2004l[?2004h>  'A':(-1.1,0.0,0.4),'D':(1.1,0.0,0.4),'S':(0.0,0.0,1.9),
+[?2004l[?2004h>  'B':(-1.0,-1.1,-0.6),'C':(1.0,-1.1,-0.6),
+[?2004l[?2004h>  'E':(-1.0,1.1,-0.6),'F':(1.0,1.1,-0.6)
+[?2004l[?2004h> }
+[?2004l[?2004h> bonds=[('A','S',1.80),('D','S',1.80),('A','B',1.52),('B','C',1.34),('C','D',1.52),('A','E',1.52),('E','F',1.54),('F','D',1.52)]
+[?2004l[?2004h> angles=[('S','A','B',109.47),('S','A','E',109.47),('B','A','E',109.47),
+[?2004l[?2004h>         ('S','D','C',109.47),('S','D','F',109.47),('C','D','F',109.47),
+[?2004l[?2004h>         ('A','B','C',120.0),('B','C','D',120.0),('A','S','D',97.0),
+[?2004l[?2004h>         ('A','E','F',109.0),('D','F','E',109.0)]
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(p,q): return tuple(p[i]-q[i] for i in range(3))
+[?2004l[?2004h> def add(p,q): return tuple(p[i]+q[i] for i in range(3))
+[?2004l[?2004h> def mul(a,p): return tuple(a*x for x in p)
+[?2004l[?2004h> def dot(u,v): return sum(u[i]*v[i] for i in range(3))
+[?2004l[?2004h> def cross(u,v): return (u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0])
+[?2004l[?2004h> def norm(u): return math.sqrt(dot(u,u))
+[?2004l[?2004h> def unit(u):
+[?2004l[?2004h>     n=norm(u); return tuple(x/n for x in u)
+[?2004l[?2004h> def angle(u,v):
+[?2004l[?2004h>     c=dot(unit(u),unit(v)); c=max(-1,min(1,c)); return math.degrees(math.acos(c))
+[?2004l[?2004h> 
+[?2004l[?2004h> def objective(coords):
+[?2004l[?2004h>     E=0.0
+[?2004l[?2004h>     for a,b,L in bonds:
+[?2004l[?2004h>         d=norm(sub(coords[a],coords[b]))
+[?2004l[?2004h>         E += 100.0*(d-L)**2
+[?2004l[?2004h>     for a,b,c,th in angles:
+[?2004l[?2004h>         u=sub(coords[a],coords[b]); v=sub(coords[c],coords[b])
+[?2004l[?2004h>         E += (angle(u,v)-th)**2
+[?2004l[?2004h>     return E
+[?2004l[?2004h> 
+[?2004l[?2004h> def coords_array(coords):
+[?2004l[?2004h>     arr=[]
+[?2004l[?2004h>     for a in atoms: arr += list(coords[a])
+[?2004l[?2004h>     return arr
+[?2004l[?2004h> def array_coords(arr):
+[?2004l[?2004h>     return {a:tuple(arr[3*i:3*i+3]) for i,a in enumerate(atoms)}
+[?2004l[?2004h> 
+[?2004l[?2004h> def grad(arr):
+[?2004l[?2004h>     g=[0.0]*len(arr); eps=1e-5
+[?2004l[?2004h>     f0=objective(array_coords(arr))
+[?2004l[?2004h>     for i in range(len(arr)):
+[?2004l[?2004h>         old=arr[i]; arr[i]=old+eps
+[?2004l[?2004h>         f=objective(array_coords(arr)); arr[i]=old
+[?2004l[?2004h>         g[i]=(f-f0)/eps
+[?2004l[?2004h>     return g
+[?2004l[?2004h> 
+[?2004l[?2004h> best=None
+[?2004l[?2004h> for trial in range(4):
+[?2004l[?2004h>     coords={a:tuple(x+random.uniform(-0.1,0.1) for x in start[a]) for a in atoms}
+[?2004l[?2004h>     arr=coords_array(coords)
+[?2004l[?2004h>     lr=0.002
+[?2004l[?2004h>     for it in range(4000):
+[?2004l[?2004h>         g=grad(arr)
+[?2004l[?2004h>         arr=[arr[i]-lr*g[i] for i in range(len(arr))]
+[?2004l[?2004h>         if it%1000==999: lr*=0.5
+[?2004l[?2004h>     val=objective(array_coords(arr))
+[?2004l[?2004h>     if best is None or val<best[0]:
+[?2004l[?2004h>         best=(val,arr[:])
+[?2004l[?2004h>     print('trial',trial,'objective',round(val,4))
+[?2004l[?2004h> val,arr=best
+[?2004l[?2004h> coords=array_coords(arr)
+[?2004l[?2004h> print('best objective',round(val,6))
+[?2004l[?2004h> for a in atoms: print(a,tuple(round(x,4) for x in coords[a]))
+[?2004l[?2004h> 
+[?2004l[?2004h> def determinant(center,p1,p2,p3,p4):
+[?2004l[?2004h>     v1=sub(p1,center); v2=sub(p2,center); v3=sub(p3,center)
+[?2004l[?2004h>     return dot(v1,cross(v2,v3))
+[?2004l[?2004h> def config(center,p1,p2,p3,p4):
+[?2004l[?2004h>     D=determinant(center,p1,p2,p3,p4)
+[?2004l[?2004h>     return 'R' if D<0 else 'S', D
+[?2004l[?2004h> 
+[?2004l[?2004h> # fourth tetrahedral bond at A and D from three known ring bonds
+[?2004l[?2004h> def fourth(center,p1,p2,p3):
+[?2004l[?2004h>     u=unit(sub(p1,center)); v=unit(sub(p2,center)); w=unit(sub(p3,center))
+[?2004l[?2004h>     return unit(tuple(-(u[i]+v[i]+w[i]) for i in range(3)))
+[?2004l[?2004h> dA=fourth(coords['A'],coords['S'],coords['B'],coords['E'])
+[?2004l[?2004h> dD=fourth(coords['D'],coords['S'],coords['C'],coords['F'])
+[?2004l[?2004h> MeA=add(coords['A'],dA); MeD=add(coords['D'],dD)
+[?2004l[?2004h> print('C4 config',config(coords['A'],coords['S'],coords['E'],coords['B'],MeA)[0])
+[?2004l[?2004h> print('C7 config',config(coords['D'],coords['S'],coords['F'],coords['C'],MeD)[0])
+[?2004l[?2004h> 
+[?2004l[?2004h> def tetra_other(center,p1,p2):
+[?2004l[?2004h>     u1=unit(sub(p1,center)); u2=unit(sub(p2,center))
+[?2004l[?2004h>     n=unit(cross(u1,u2)); w=mul(-1,add(u1,u2))
+[?2004l[?2004h>     q=math.sqrt(max(0.0,1.0-dot(w,w)/4.0))
+[?2004l[?2004h>     u3=add(mul(0.5,w),mul(q,n)); u4=add(mul(0.5,w),mul(-q,n))
+[?2004l[?2004h>     return u3,u4
+[?2004l[?2004h> 
+[?2004l[?2004h> for mode in ['exo','endo']:
+[?2004l[?2004h>     H_E=[]; G_E=[]; H_F=[]; G_F=[]
+[?2004l[?2004h>     u3,u4=tetra_other(coords['E'],coords['A'],coords['F'])
+[?2004l[?2004h>     # exo: substituent on +z side (same side as S); endo: -z side
+[?2004l[?2004h>     if u3[2] > u4[2]:
+[?2004l[?2004h>         up,down=u3,u4
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         up,down=u4,u3
+[?2004l[?2004h>     if mode=='exo': Gdir,Hdir=up,down
+[?2004l[?2004h>     else: Gdir,Hdir=down,up
+[?2004l[?2004h>     G_E=add(coords['E'],Gdir); H_E=add(coords['E'],Hdir)
+[?2004l[?2004h>     u3,u4=tetra_other(coords['F'],coords['D'],coords['E'])
+[?2004l[?2004h>     if u3[2] > u4[2]:
+[?2004l[?2004h>         up,down=u3,u4
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         up,down=u4,u3
+[?2004l[?2004h>     if mode=='exo': Gdir,Hdir=up,down
+[?2004l[?2004h>     else: Gdir,Hdir=down,up
+[?2004l[?2004h>     G_F=add(coords['F'],Gdir); H_F=add(coords['F'],Hdir)
+[?2004l[?2004h>     # CIP at C3a(E): 1=G,2=A,3=F,4=H ; at C7a(F): 1=G,2=D,3=E,4=H
+[?2004l[?2004h>     cfgE=config(coords['E'],G_E,coords['A'],coords['F'],H_E)[0]
+[?2004l[?2004h>     cfgF=config(coords['F'],G_F,coords['D'],coords['E'],H_F)[0]
+[?2004l[?2004h>     print(mode,'C3a',cfgE,'C7a',cfgF)
+[?2004l[?2004h> PY
+[?2004ltrial 0 objective 5581.1551
+trial 1 objective 5581.1652
+trial 2 objective 5581.1419
+trial 3 objective 5581.1594
+best objective 5581.141899
+A (-1.6081, 0.448, -0.1141)
+D (1.6378, -1.1151, 1.5607)
+S (-1.4293, -0.4825, 2.0523)
+B (-1.248, -1.5434, -2.5766)
+C (0.874, -2.235, -0.933)
+E (-0.1793, 3.1757, -0.5739)
+F (2.0361, 1.5965, 0.788)
+C4 config R
+C7 config S
+exo C3a S C7a R
+endo C3a R C7a S
+[?2004hroot@1c6fa0b78581:/app# 

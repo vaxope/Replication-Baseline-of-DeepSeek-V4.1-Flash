@@ -1,0 +1,628 @@
+[?2004hroot@928ac53cdef4:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@928ac53cdef4:/app# clear
+[?2004l[H[J[3J[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> try:
+[?2004l[?2004h>     import rdkit
+[?2004l[?2004h>     print('rdkit', rdkit.__version__)
+[?2004l[?2004h> except Exception as e:
+[?2004l[?2004h>     print('no rdkit:', e)
+[?2004l[?2004h> PY
+[?2004lno rdkit: No module named 'rdkit'
+[?2004hroot@928ac53cdef4:/app# command -v obabel || command -v babel || true
+[?2004l[?2004hroot@928ac53cdef4:/app# cat > /tmp/geom.py <<'PY'
+[?2004l[?2004h> import numpy as np, itertools, math
+[?2004l[?2004h> 
+[?2004l[?2004h> # ideal chair with alternating z
+[?2004l[?2004h> d = 1/(4*math.sqrt(2))
+[?2004l[?2004h> s3 = math.sqrt(3)/2
+[?2004l[?2004h> C = np.array([
+[?2004l[?2004h>     [1, 0, d],
+[?2004l[?2004h>     [0.5, s3, -d],
+[?2004l[?2004h>     [-0.5, s3, d],
+[?2004l[?2004h>     [-1, 0, -d],
+[?2004l[?2004h>     [-0.5, -s3, d],
+[?2004l[?2004h>     [0.5, -s3, -d]
+[?2004l[?2004h> ], float)
+[?2004l[?2004h> 
+[?2004l[?2004h> # return unit vectors from atom i to its two ring neighbors
+[?2004l[?2004h> nbrs = {i:((i-1)%6,(i+1)%6) for i in range(6)}
+[?2004l[?2004h> ringdirs = {}
+[?2004l[?2004h> for i,(a,b) in nbrs.items():
+[?2004l[?2004h>     u = C[a]-C[i]; v = C[b]-C[i]
+[?2004l[?2004h>     u /= np.linalg.norm(u); v /= np.linalg.norm(v)
+[?2004l[?2004h>     m = u+v; m /= np.linalg.norm(m)
+[?2004l[?2004h>     n = np.cross(u,v); n /= np.linalg.norm(n)
+[?2004l[?2004h>     w1 = -m/math.sqrt(3) + math.sqrt(2/3)*n
+[?2004l[?2004h>     w2 = -m/math.sqrt(3) - math.sqrt(2/3)*n
+[?2004l[?2004h>     # axial is the one with larger absolute z component
+[?2004l[?2004h>     if abs(w1[2]) > abs(w2[2]): ax,eq = w1,w2
+[?2004l[?2004h>     else: ax,eq = w2,w1
+[?2004l[?2004h>     ringdirs[i] = (u,v,ax,eq)
+[?2004l[?2004h>     print('C%d'%(i+1), 'ax', np.round(ax,4), 'eq', np.round(eq,4), 'z(ax)=%.3f z(eq)=%.3f'%(ax[2],eq[2]))
+[?2004l[?2004h> 
+[?2004l[?2004h> def chirality(center, bonds, prio):
+[?2004l[?2004h>     # bonds: list of 4 vectors; prio: list of indices in priority order 1,2,3,4
+[?2004l[?2004h>     v1,v2,v3,v4 = [bonds[p] for p in prio]
+[?2004l[?2004h>     # All vectors point from center to ligand. Det sign calibration: negative R, positive S
+[?2004l[?2004h>     D = np.linalg.det(np.column_stack([v1,v2,v3]))
+[?2004l[?2004h>     return ('R' if D < 0 else 'S'), D
+[?2004l[?2004h> 
+[?2004l[?2004h> # First find which C4 heavy substituent orientation gives R
+[?2004l[?2004h> print('\nC4 configs (priority iPr, C3, C5, H):')
+[?2004l[?2004h> for choice in [0,1]:
+[?2004l[?2004h>     i=3
+[?2004l[?2004h>     u,v,ax,eq = ringdirs[i]
+[?2004l[?2004h>     heavy = ax if choice==0 else eq
+[?2004l[?2004h>     h = eq if choice==0 else ax
+[?2004l[?2004h>     # priorities: iPr=0, C3=u, C5=v, H=1; assign indices [0,1,2,3]
+[?2004l[?2004h>     bonds = [heavy, u, v, h]
+[?2004l[?2004h>     conf,D = chirality(C, bonds, [0,1,2,3])
+[?2004l[?2004h>     print('iPr along', 'ax' if choice==0 else 'eq', conf, 'det=%.4f'%D)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Enumerate C1 and C2 oxygen placements, holding C4 R (iPr axial or eq)
+[?2004l[?2004h> # For C1: priority O, C2, C6, CH3. Ring neighbors from C1 are C2 and C6.
+[?2004l[?2004h> # For C2: priority O, C1, C3, H. Ring neighbors C1 and C3.
+[?2004l[?2004h> # Use fixed C4 iPr orientation (choice found above), then enumerate O orientations.
+[?2004l[?2004h> print('\nC1/C2 oxygen orientation combos:')
+[?2004l[?2004h> for c4choice in [0,1]:
+[?2004l[?2004h>     for c1choice in [0,1]:   # O on ax or eq (CH3 opposite)
+[?2004l[?2004h>         for c2choice in [0,1]:  # OMe heavy on ax or eq (H opposite)
+[?2004l[?2004h>             i4=3; u4,v4,ax4,eq4 = ringdirs[i4]
+[?2004l[?2004h>             ipr = ax4 if c4choice==0 else eq4
+[?2004l[?2004h>             h4  = eq4 if c4choice==0 else ax4
+[?2004l[?2004h>             conf4,D4 = chirality(C,[ipr,u4,v4,h4],[0,1,2,3])
+[?2004l[?2004h>             if conf4 != 'R':
+[?2004l[?2004h>                 continue
+[?2004l[?2004h>             # C1 index 0, neighbors C2(index1) and C6(index5)
+[?2004l[?2004h>             i1=0; u1,v1,ax1,eq1 = ringdirs[i1]
+[?2004l[?2004h>             O1 = ax1 if c1choice==0 else eq1
+[?2004l[?2004h>             CH3 = eq1 if c1choice==0 else ax1
+[?2004l[?2004h>             # priorities O=0, C2=1, C6=2, CH3=3
+[?2004l[?2004h>             conf1,D1 = chirality(C,[O1,u1,v1,CH3],[0,1,2,3])
+[?2004l[?2004h>             # C2 index 1, neighbors C1(index0) and C3(index2)
+[?2004l[?2004h>             i2=1; u2,v2,ax2,eq2 = ringdirs[i2]
+[?2004l[?2004h>             O2 = ax2 if c2choice==0 else eq2
+[?2004l[?2004h>             H2 = eq2 if c2choice==0 else ax2
+[?2004l[?2004h>             # priorities O=0, C1=1, C3=2, H=3
+[?2004l[?2004h>             conf2,D2 = chirality(C,[O2,u2,v2,H2],[0,1,2,3])
+[?2004l[?2004h>             print('c4=%s c1_O=%s c2_O=%s => C4 %s C1 %s C2 %s'%(
+[?2004l[?2004h>                 'ax' if c4choice==0 else 'eq', 'ax' if c1choice==0 else 'eq',
+[?2004l[?2004h>                 'ax' if c2choice==0 else 'eq', conf4, conf1, conf2))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@928ac53cdef4:/app# python3 /tmp/geom.py
+[?2004lTraceback (most recent call last):
+  File "/tmp/geom.py", line 1, in <module>
+    import numpy as np, itertools, math
+ModuleNotFoundError: No module named 'numpy'
+[?2004hroot@928ac53cdef4:/app# cat > /tmp/geom2.py <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return (a[0]-b[0], a[1]-b[1], a[2]-b[2])
+[?2004l[?2004h> def add(a,b): return (a[0]+b[0], a[1]+b[1], a[2]+b[2])
+[?2004l[?2004h> def mul(a,s): return (a[0]*s, a[1]*s, a[2]*s)
+[?2004l[?2004h> def dot(a,b): return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
+[?2004l[?2004h> def cross(a,b):
+[?2004l[?2004h>     return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return (a[0]/n,a[1]/n,a[2]/n)
+[?2004l[?2004h> def det3(a,b,c): return dot(a,cross(b,c))
+[?2004l[?2004h> 
+[?2004l[?2004h> d=1/(4*math.sqrt(2)); s3=math.sqrt(3)/2
+[?2004l[?2004h> C=[(1,0,d),(0.5,s3,-d),(-0.5,s3,d),(-1,0,-d),(-0.5,-s3,d),(0.5,-s3,-d)]
+[?2004l[?2004h> ringdirs={}
+[?2004l[?2004h> for i in range(6):
+[?2004l[?2004h>     u=unit(sub(C[(i-1)%6],C[i]))
+[?2004l[?2004h>     v=unit(sub(C[(i+1)%6],C[i]))
+[?2004l[?2004h>     m=unit(add(u,v))
+[?2004l[?2004h>     n=unit(cross(u,v))
+[?2004l[?2004h>     w1=add(mul(m,-1/math.sqrt(3)), mul(n,math.sqrt(2/3)))
+[?2004l[?2004h>     w2=add(mul(m,-1/math.sqrt(3)), mul(n,-math.sqrt(2/3)))
+[?2004l[?2004h>     if abs(w1[2])>abs(w2[2]): ax,eq=w1,w2
+[?2004l[?2004h>     else: ax,eq=w2,w1
+[?2004l[?2004h>     ringdirs[i]=(u,v,ax,eq)
+[?2004l[?2004h>     print('C%d ax=(% .3f,% .3f,% .3f) eq=(% .3f,% .3f,% .3f)'%(i+1,*ax,*eq))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Calibrate: C4 is index 3. Priorities: iPr > C3 > C5 > H
+[?2004l[?2004h> for ipr_ax in [True,False]:
+[?2004l[?2004h>     u,v,ax,eq=ringdirs[3]
+[?2004l[?2004h>     ipr=ax if ipr_ax else eq
+[?2004l[?2004h>     H=eq if ipr_ax else ax
+[?2004l[?2004h>     # ligand vectors priority order: ipr, C3(u), C5(v), H
+[?2004l[?2004h>     D=det3(ipr,u,v)
+[?2004l[?2004h>     # det>0 means S (from calibration), det<0 means R
+[?2004l[?2004h>     print('C4 iPr', 'axial' if ipr_ax else 'equatorial', 'det=', D, 'config=', 'S' if D>0 else 'R')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Print possible final configs for a chair C1-C2 with trans OMe/OH-derived O substituents.
+[?2004l[?2004h> # Ring vector to C2 from C1 is u at C1; from C1 to C6 is v at C1.
+[?2004l[?2004h> # Priorities at C1: O > C2 > C6 > CH3. At C2: O > C1 > C3 > H.
+[?2004l[?2004h> print('\nPossible C1/C2 configurations with C4 R:')
+[?2004l[?2004h> for c4_ax in [True,False]:
+[?2004l[?2004h>     u4,v4,ax4,eq4=ringdirs[3]
+[?2004l[?2004h>     ipr=ax4 if c4_ax else eq4
+[?2004l[?2004h>     H4=eq4 if c4_ax else ax4
+[?2004l[?2004h>     D4=det3(ipr,u4,v4)
+[?2004l[?2004h>     conf4='S' if D4>0 else 'R'
+[?2004l[?2004h>     if conf4!='R': continue
+[?2004l[?2004h>     for c1_ox_ax in [True,False]:
+[?2004l[?2004h>         u1,v1,ax1,eq1=ringdirs[0]
+[?2004l[?2004h>         O1=ax1 if c1_ox_ax else eq1
+[?2004l[?2004h>         CH3=eq1 if c1_ox_ax else ax1
+[?2004l[?2004h>         D1=det3(O1,u1,v1)  # priorities O,C2,C6,Me
+[?2004l[?2004h>         conf1='S' if D1>0 else 'R'
+[?2004l[?2004h>         for c2_ox_ax in [True,False]:
+[?2004l[?2004h>             u2,v2,ax2,eq2=ringdirs[1]
+[?2004l[?2004h>             O2=ax2 if c2_ox_ax else eq2
+[?2004l[?2004h>             H2=eq2 if c2_ox_ax else ax2
+[?2004l[?2004h>             D2=det3(O2,u2,v2)  # priorities O,C1,C3,H
+[?2004l[?2004h>             conf2='S' if D2>0 else 'R'
+[?2004l[?2004h>             print('C4 iPr %-3s | C1 O %-3s => %s | C2 O %-3s => %s | final configs %s%s%s'%(
+[?2004l[?2004h>                 'ax' if c4_ax else 'eq', 'ax' if c1_ox_ax else 'eq', conf1, 'ax' if c2_ox_ax else 'eq', conf2, conf1,conf2,conf4))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@928ac53cdef4:/app# python3 /tmp/geom2.py
+[?2004lC1 ax=( 0.000,-0.000, 1.000) eq=( 0.943, 0.000,-0.333)
+C2 ax=( 0.000, 0.000,-1.000) eq=( 0.471, 0.816, 0.333)
+C3 ax=(-0.000, 0.000, 1.000) eq=(-0.471, 0.816,-0.333)
+C4 ax=(-0.000, 0.000,-1.000) eq=(-0.943,-0.000, 0.333)
+C5 ax=(-0.000,-0.000, 1.000) eq=(-0.471,-0.816,-0.333)
+C6 ax=( 0.000,-0.000,-1.000) eq=( 0.471,-0.816, 0.333)
+C4 iPr axial det= 0.769800358919501 config= S
+C4 iPr equatorial det= -0.7698003589195009 config= R
+
+Possible C1/C2 configurations with C4 R:
+C4 iPr eq  | C1 O ax  => R | C2 O ax  => S | final configs RSR
+C4 iPr eq  | C1 O ax  => R | C2 O eq  => R | final configs RRR
+C4 iPr eq  | C1 O eq  => S | C2 O ax  => S | final configs SSR
+C4 iPr eq  | C1 O eq  => S | C2 O eq  => R | final configs SRR
+[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b):
+[?2004l[?2004h>     return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> def det3(a,b,c):
+[?2004l[?2004h>     return dot(a,cross(b,c))
+[?2004l[?2004h> 
+[?2004l[?2004h> s=1/math.sqrt(3)
+[?2004l[?2004h> A=tuple(1*s for _ in range(3))
+[?2004l[?2004h> # regular tetrahedron alternate vertices
+[?2004l[?2004h> A=(s,s,s); B=(s,-s,-s); C=(-s,s,-s); D=(-s,-s,s)
+[?2004l[?2004h> print('Tetrahedron standard signed volume (1,2,3,4=A,B,C,D):', det3(sub(A,D),sub(B,D),sub(C,D)))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Rotate so D points to -z (away from viewer at +z).
+[?2004l[?2004h> z=unit(mul(D,-1))
+[?2004l[?2004h> # choose x perpendicular to z using A
+[?2004l[?2004h> tmp=sub(A,mul(z,dot(A,z)))
+[?2004l[?2004h> x=unit(tmp)
+[?2004l[?2004h> y=cross(z,x)
+[?2004l[?2004h> # rotation rows are x,y,z
+[?2004l[?2004h> R=[x,y,z]
+[?2004l[?2004h> def rot(v): return tuple(dot(row,v) for row in R)
+[?2004l[?2004h> Ap=rot(A); Bp=rot(B); Cp=rot(C); Dp=rot(D)
+[?2004l[?2004h> print('D after rotation:',Dp)
+[?2004l[?2004h> print('projected A,B,C:',[(round(v[0],3),round(v[1],3)) for v in (Ap,Bp,Cp)])
+[?2004l[?2004h> area=(Bp[0]-Ap[0])*(Cp[1]-Ap[1])-(Bp[1]-Ap[1])*(Cp[0]-Ap[0])
+[?2004l[?2004h> print('projected orientation signed area:',area,'=>','CCW' if area>0 else 'CW')
+[?2004l[?2004h> print('Thus if D away, 1->2->3 is', 'R if area<0 else 'S')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Ideal chair ring directions as before
+[?2004l[?2004h> import math as m
+[?2004l[?2004h> d=1/(4*m.sqrt(2)); s3=m.sqrt(3)/2
+[?2004l[?2004h> Cring=[(1,0,d),(0.5,s3,-d),(-0.5,s3,d),(-1,0,-d),(-0.5,-s3,d),(0.5,-s3,-d)]
+[?2004l[?2004h> ringdirs={}
+[?2004l[?2004h> for i in range(6):
+[?2004l[?2004h>     u=unit(sub(Cring[(i-1)%6],Cring[i]))
+[?2004l[?2004h>     v=unit(sub(Cring[(i+1)%6],Cring[i]))
+[?2004l[?2004h>     mm=unit(add(u,v)); n=unit(cross(u,v))
+[?2004l[?2004h>     w1=add(mul(mm,-1/m.sqrt(3)), mul(n,m.sqrt(2/3)))
+[?2004l[?2004h>     w2=add(mul(mm,-1/m.sqrt(3)), mul(n,-m.sqrt(2/3)))
+[?2004l[?2004h>     if abs(w1[2])>abs(w2[2]): ax,eq=w1,w2
+[?2004l[?2004h>     else: ax,eq=w2,w1
+[?2004l[?2004h>     ringdirs[i]=(u,v,ax,eq)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Standard signed volume det(v1-v4,v2-v4,v3-v4)>0 corresponds to S if above result says CCW negative.
+[?2004l[?2004h> def config(v1,v2,v3,v4):
+[?2004l[?2004h>     D=det3(sub(v1,v4),sub(v2,v4),sub(v3,v4))
+[?2004l[?2004h>     return ('S' if D>0 else 'R'),D
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nC4 configurations using standard CIP:')
+[?2004l[?2004h> for label,ipr in [('ax',ringdirs[3][2]),('eq',ringdirs[3][3])]:
+[?2004l[?2004h>     u,v,ax,eq=ringdirs[3]
+[?2004l[?2004h>     H=eq if label=='ax' else ax
+[?2004l[?2004h>     # priorities: iPr, C3, C5, H
+[?2004l[?2004h>     conf,D=config(ipr,u,v,H)
+[?2004l[?2004h>     print('iPr',label,'=>',conf,'det=%.4f'%D)
+[?2004l[?2004h> PY
+[?2004l  File "<stdin>", line 35
+    print('Thus if D away, 1->2->3 is', 'R if area<0 else 'S')
+                                                            ^
+SyntaxError: unterminated string literal (detected at line 35)
+[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b):
+[?2004l[?2004h>     return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> def det3(a,b,c):
+[?2004l[?2004h>     return dot(a,cross(b,c))
+[?2004l[?2004h> 
+[?2004l[?2004h> s=1/math.sqrt(3)
+[?2004l[?2004h> A=(s,s,s); B=(s,-s,-s); C=(-s,s,-s); D=(-s,-s,s)
+[?2004l[?2004h> print('Tetrahedron standard signed volume (1,2,3,4=A,B,C,D):', det3(sub(A,D),sub(B,D),sub(C,D)))
+[?2004l[?2004h> 
+[?2004l[?2004h> z=unit(mul(D,-1))
+[?2004l[?2004h> tmp=sub(A,mul(z,dot(A,z)))
+[?2004l[?2004h> x=unit(tmp)
+[?2004l[?2004h> y=cross(z,x)
+[?2004l[?2004h> R=[x,y,z]
+[?2004l[?2004h> def rot(v): return tuple(dot(row,v) for row in R)
+[?2004l[?2004h> Ap=rot(A); Bp=rot(B); Cp=rot(C); Dp=rot(D)
+[?2004l[?2004h> print('D after rotation:',Dp)
+[?2004l[?2004h> print('projected A,B,C:',[(round(v[0],3),round(v[1],3)) for v in (Ap,Bp,Cp)])
+[?2004l[?2004h> area=(Bp[0]-Ap[0])*(Cp[1]-Ap[1])-(Bp[1]-Ap[1])*(Cp[0]-Ap[0])
+[?2004l[?2004h> print('projected orientation signed area:',area,'=>','CCW' if area>0 else 'CW')
+[?2004l[?2004h> print('Thus if D away, 1->2->3 is','R' if area<0 else 'S')
+[?2004l[?2004h> 
+[?2004l[?2004h> d=1/(4*math.sqrt(2)); s3=math.sqrt(3)/2
+[?2004l[?2004h> Cring=[(1,0,d),(0.5,s3,-d),(-0.5,s3,d),(-1,0,-d),(-0.5,-s3,d),(0.5,-s3,-d)]
+[?2004l[?2004h> ringdirs={}
+[?2004l[?2004h> for i in range(6):
+[?2004l[?2004h>     u=unit(sub(Cring[(i-1)%6],Cring[i]))
+[?2004l[?2004h>     v=unit(sub(Cring[(i+1)%6],Cring[i]))
+[?2004l[?2004h>     mm=unit(add(u,v)); n=unit(cross(u,v))
+[?2004l[?2004h>     w1=add(mul(mm,-1/math.sqrt(3)), mul(n,math.sqrt(2/3)))
+[?2004l[?2004h>     w2=add(mul(mm,-1/math.sqrt(3)), mul(n,-math.sqrt(2/3)))
+[?2004l[?2004h>     if abs(w1[2])>abs(w2[2]): ax,eq=w1,w2
+[?2004l[?2004h>     else: ax,eq=w2,w1
+[?2004l[?2004h>     ringdirs[i]=(u,v,ax,eq)
+[?2004l[?2004h> 
+[?2004l[?2004h> def config(v1,v2,v3,v4):
+[?2004l[?2004h>     D=det3(sub(v1,v4),sub(v2,v4),sub(v3,v4))
+[?2004l[?2004h>     return ('S' if D>0 else 'R'),D
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nC4 configurations using standard CIP:')
+[?2004l[?2004h> for label,ipr in [('ax',ringdirs[3][2]),('eq',ringdirs[3][3])]:
+[?2004l[?2004h>     u,v,ax,eq=ringdirs[3]
+[?2004l[?2004h>     H=eq if label=='ax' else ax
+[?2004l[?2004h>     conf,D=config(ipr,u,v,H)
+[?2004l[?2004h>     print('iPr',label,'=>',conf,'det=%.4f'%D)
+[?2004l[?2004h> PY
+[?2004lTetrahedron standard signed volume (1,2,3,4=A,B,C,D): 3.0792014356780055
+D after rotation: (1.1102230246251565e-16, 0.0, -1.0000000000000002)
+projected A,B,C: [(0.943, 0.0), (-0.471, 0.816), (-0.471, -0.816)]
+projected orientation signed area: 2.3094010767585047 => CCW
+Thus if D away, 1->2->3 is S
+
+C4 configurations using standard CIP:
+iPr ax => S det=3.0792
+iPr eq => R det=-3.0792
+[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> def det3(a,b,c): return dot(a,cross(b,c))
+[?2004l[?2004h> 
+[?2004l[?2004h> def config(v1,v2,v3,v4):
+[?2004l[?2004h>     D=det3(sub(v1,v4),sub(v2,v4),sub(v3,v4))
+[?2004l[?2004h>     return ('S' if D>0 else 'R'),D
+[?2004l[?2004h> 
+[?2004l[?2004h> d=1/(4*math.sqrt(2)); s3=math.sqrt(3)/2
+[?2004l[?2004h> C=[(1,0,d),(0.5,s3,-d),(-0.5,s3,d),(-1,0,-d),(-0.5,-s3,d),(0.5,-s3,-d)]
+[?2004l[?2004h> rd={}
+[?2004l[?2004h> for i in range(6):
+[?2004l[?2004h>     u=unit(sub(C[(i-1)%6],C[i]))
+[?2004l[?2004h>     v=unit(sub(C[(i+1)%6],C[i]))
+[?2004l[?2004h>     m=unit(add(u,v)); n=unit(cross(u,v))
+[?2004l[?2004h>     w1=add(mul(m,-1/math.sqrt(3)),mul(n,math.sqrt(2/3)))
+[?2004l[?2004h>     w2=add(mul(m,-1/math.sqrt(3)),mul(n,-math.sqrt(2/3)))
+[?2004l[?2004h>     if abs(w1[2])>abs(w2[2]): ax,eq=w1,w2
+[?2004l[?2004h>     else: ax,eq=w2,w1
+[?2004l[?2004h>     rd[i]=(u,v,ax,eq)
+[?2004l[?2004h> 
+[?2004l[?2004h> print('C4 with iPr eq:')
+[?2004l[?2004h> u4,v4,ax4,eq4=rd[3]
+[?2004l[?2004h> for lbl,ipr in [('ax',ax4),('eq',eq4)]:
+[?2004l[?2004h>     H=eq4 if lbl=='ax' else ax4
+[?2004l[?2004h>     print(lbl,*config(ipr,u4,v4,H))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nC1 configurations (priorities O, C2, C6, Me):')
+[?2004l[?2004h> u1,v1,ax1,eq1=rd[0]
+[?2004l[?2004h> for lbl,O in [('ax',ax1),('eq',eq1)]:
+[?2004l[?2004h>     Me=eq1 if lbl=='ax' else ax1
+[?2004l[?2004h>     print('O',lbl,*config(O,u1,v1,Me))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nC2 configurations (priorities O, C1, C3, H):')
+[?2004l[?2004h> u2,v2,ax2,eq2=rd[1]
+[?2004l[?2004h> for lbl,O in [('ax',ax2),('eq',eq2)]:
+[?2004l[?2004h>     H=eq2 if lbl=='ax' else ax2
+[?2004l[?2004h>     print('O',lbl,*config(O,v2,u2,H))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nAll C4-R combos:')
+[?2004l[?2004h> for c4lbl,ipr in [('ax',ax4),('eq',eq4)]:
+[?2004l[?2004h>     H4=eq4 if c4lbl=='ax' else ax4
+[?2004l[?2004h>     c4,D4=config(ipr,u4,v4,H4)
+[?2004l[?2004h>     if c4!='R': continue
+[?2004l[?2004h>     for c1lbl,O1 in [('ax',ax1),('eq',eq1)]:
+[?2004l[?2004h>         Me=eq1 if c1lbl=='ax' else ax1
+[?2004l[?2004h>         c1,D1=config(O1,u1,v1,Me)
+[?2004l[?2004h>         for c2lbl,O2 in [('ax',ax2),('eq',eq2)]:
+[?2004l[?2004h>             H2=eq2 if c2lbl=='ax' else ax2
+[?2004l[?2004h>             c2,D2=config(O2,v2,u2,H2)
+[?2004l[?2004h>             print('C4(R,iPr=%s) C1(%s,O) C2(%s,O) => %s%s%s'%(c4lbl,c1lbl,c2lbl,c1,c2,c4))
+[?2004l[?2004h> PY
+[?2004lC4 with iPr eq:
+ax S 3.079201435678004
+eq R -3.079201435678004
+
+C1 configurations (priorities O, C2, C6, Me):
+O ax R -3.079201435678004
+O eq S 3.079201435678004
+
+C2 configurations (priorities O, C1, C3, H):
+O ax R -3.079201435678004
+O eq S 3.079201435678004
+
+All C4-R combos:
+C4(R,iPr=eq) C1(ax,O) C2(ax,O) => RRR
+C4(R,iPr=eq) C1(ax,O) C2(eq,O) => RSR
+C4(R,iPr=eq) C1(eq,O) C2(ax,O) => SRR
+C4(R,iPr=eq) C1(eq,O) C2(eq,O) => SSR
+[?2004hroot@928ac53cdef4:/app# echo -n "A" > /app/answer.txt
+[?2004l[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> def det3(a,b,c): return dot(a,cross(b,c))
+[?2004l[?2004h> def config(v1,v2,v3,v4):
+[?2004l[?2004h>     D=det3(sub(v1,v4),sub(v2,v4),sub(v3,v4))
+[?2004l[?2004h>     return ('S' if D>0 else 'R'),D
+[?2004l[?2004h> 
+[?2004l[?2004h> d=1/(4*math.sqrt(2)); s3=math.sqrt(3)/2
+[?2004l[?2004h> C=[(1,0,d),(0.5,s3,-d),(-0.5,s3,d),(-1,0,-d),(-0.5,-s3,d),(0.5,-s3,-d)]
+[?2004l[?2004h> rd={}
+[?2004l[?2004h> for i in range(6):
+[?2004l[?2004h>     u=unit(sub(C[(i-1)%6],C[i]))
+[?2004l[?2004h>     v=unit(sub(C[(i+1)%6],C[i]))
+[?2004l[?2004h>     m=unit(add(u,v)); n=unit(cross(u,v))
+[?2004l[?2004h>     w1=add(mul(m,-1/math.sqrt(3)),mul(n,math.sqrt(2/3)))
+[?2004l[?2004h>     w2=add(mul(m,-1/math.sqrt(3)),mul(n,-math.sqrt(2/3)))
+[?2004l[?2004h>     if abs(w1[2])>abs(w2[2]): ax,eq=w1,w2
+[?2004l[?2004h>     else: ax,eq=w2,w1
+[?2004l[?2004h>     rd[i]=(u,v,ax,eq)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C4 priority iPr, C3, C5, H; with C4 iPr equatorial gives R
+[?2004l[?2004h> u4,v4,ax4,eq4=rd[3]
+[?2004l[?2004h> print('C4 calibrated configs:')
+[?2004l[?2004h> for lbl,ipr in [('ax',ax4),('eq',eq4)]:
+[?2004l[?2004h>     H=eq4 if lbl=='ax' else ax4
+[?2004l[?2004h>     print(lbl, config(ipr,u4,v4,H))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C1: u=to C6, v=to C2. Priorities O, C2, C6, Me
+[?2004l[?2004h> u1,v1,ax1,eq1=rd[0]
+[?2004l[?2004h> print('C1 O placements:')
+[?2004l[?2004h> for lbl,O in [('ax',ax1),('eq',eq1)]:
+[?2004l[?2004h>     Me=eq1 if lbl=='ax' else ax1
+[?2004l[?2004h>     print('O',lbl, config(O,v1,u1,Me))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C2: u=to C1, v=to C3. Priorities O, C1, C3, H
+[?2004l[?2004h> u2,v2,ax2,eq2=rd[1]
+[?2004l[?2004h> print('C2 O placements:')
+[?2004l[?2004h> for lbl,O in [('ax',ax2),('eq',eq2)]:
+[?2004l[?2004h>     H=eq2 if lbl=='ax' else ax2
+[?2004l[?2004h>     print('O',lbl, config(O,u2,v2,H))
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nCombos with C4 R:')
+[?2004l[?2004h> for c4lbl,ipr in [('ax',ax4),('eq',eq4)]:
+[?2004l[?2004h>     H4=eq4 if c4lbl=='ax' else ax4
+[?2004l[?2004h>     c4,_=config(ipr,u4,v4,H4)
+[?2004l[?2004h>     if c4!='R': continue
+[?2004l[?2004h>     for c1lbl,O1 in [('ax',ax1),('eq',eq1)]:
+[?2004l[?2004h>         Me=eq1 if c1lbl=='ax' else ax1
+[?2004l[?2004h>         c1,_=config(O1,v1,u1,Me)
+[?2004l[?2004h>         for c2lbl,O2 in [('ax',ax2),('eq',eq2)]:
+[?2004l[?2004h>             H2=eq2 if c2lbl=='ax' else ax2
+[?2004l[?2004h>             c2,_=config(O2,u2,v2,H2)
+[?2004l[?2004h>             print('C4 iPr %-2s | C1 O %-2s %s | C2 O %-2s %s => %s%s%s'%(c4lbl,c1lbl,c1,c2lbl,c2,c1,c2,c4))
+[?2004l[?2004h> PY
+[?2004lC4 calibrated configs:
+ax ('S', 3.079201435678004)
+eq ('R', -3.079201435678004)
+C1 O placements:
+O ax ('S', 3.079201435678004)
+O eq ('R', -3.079201435678004)
+C2 O placements:
+O ax ('S', 3.079201435678004)
+O eq ('R', -3.079201435678004)
+
+Combos with C4 R:
+C4 iPr eq | C1 O ax S | C2 O ax S => SSR
+C4 iPr eq | C1 O ax S | C2 O eq R => SRR
+C4 iPr eq | C1 O eq R | C2 O ax S => RSR
+C4 iPr eq | C1 O eq R | C2 O eq R => RRR
+[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def det3(a,b,c): return dot(a,cross(b,c))
+[?2004l[?2004h> def config(v1,v2,v3,v4):
+[?2004l[?2004h>     D=det3(sub(v1,v4),sub(v2,v4),sub(v3,v4))
+[?2004l[?2004h>     return ('S' if D>0 else 'R'),D
+[?2004l[?2004h> 
+[?2004l[?2004h> # planar alkene: C1(-.67,0,0), C2(.67,0,0)
+[?2004l[?2004h> C1=(-.67,0,0); C2=(.67,0,0)
+[?2004l[?2004h> C6=(-.335,.58,0); Me=(-.335,-.58,0)
+[?2004l[?2004h> C3=(.335,.58,0); H=(.335,-.58,0)
+[?2004l[?2004h> for face in [1,-1]:
+[?2004l[?2004h>     O1=(C1[0],C1[1],face)
+[?2004l[?2004h>     O2=(C2[0],C2[1],face)
+[?2004l[?2004h>     # C1 priorities O, C2, C6, Me
+[?2004l[?2004h>     c1,D1=config(O1,C2,C6,Me)
+[?2004l[?2004h>     # C2 priorities O, C1, C3, H
+[?2004l[?2004h>     c2,D2=config(O2,C1,C3,H)
+[?2004l[?2004h>     print('O face', '+' if face>0 else '-', 'epoxide C1', c1, 'C2', c2, 'C1/C2 configs:', c1+c2)
+[?2004l[?2004h> PY
+[?2004lO face + epoxide C1 S C2 R C1/C2 configs: SR
+O face - epoxide C1 R C2 S C1/C2 configs: RS
+[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def det3(a,b,c): return dot(a,cross(b,c))
+[?2004l[?2004h> def config(v1,v2,v3,v4):
+[?2004l[?2004h>     D=det3(sub(v1,v4),sub(v2,v4),sub(v3,v4))
+[?2004l[?2004h>     return ('S' if D>0 else 'R'),D
+[?2004l[?2004h> 
+[?2004l[?2004h> # planar ring, sequence C1-C2-C3-C4-C5-C6
+[?2004l[?2004h> C1=(-1,0,0); C2=(-0.5,0.866,0); C3=(0.5,0.866,0)
+[?2004l[?2004h> C4=(1,0,0); C5=(0.5,-0.866,0); C6=(-0.5,-0.866,0)
+[?2004l[?2004h> # C1 substituents
+[?2004l[?2004h> Me1=(-1,0,1.0)
+[?2004l[?2004h> # C4 substituents
+[?2004l[?2004h> iPr=(1,0,1.0); H4=(1,0,-1.0)
+[?2004l[?2004h> # Determine C4 configuration for iPr up
+[?2004l[?2004h> for label,ipr,h4 in [('up',(1,0,1.0),(1,0,-1.0)), ('down',(1,0,-1.0),(1,0,1.0))]:
+[?2004l[?2004h>     conf,D=config(ipr,C3,C5,h4)
+[?2004l[?2004h>     print('C4 iPr',label,'=>',conf)
+[?2004l[?2004h> 
+[?2004l[?2004h> # For each C4 R choice, epoxidize opposite face: iPr up -> O down; iPr down -> O up.
+[?2004l[?2004h> for label,ipr,h4 in [('up',(1,0,1.0),(1,0,-1.0)), ('down',(1,0,-1.0),(1,0,1.0))]:
+[?2004l[?2004h>     c4,_=config(ipr,C3,C5,h4)
+[?2004l[?2004h>     if c4!='R': continue
+[?2004l[?2004h>     face=-1 if label=='up' else 1
+[?2004l[?2004h>     O1=(C1[0],C1[1],face*1.0)
+[?2004l[?2004h>     O2=(C2[0],C2[1],face*1.0)
+[?2004l[?2004h>     # final after opening at C2 anti: O1 stays, O2 flips
+[?2004l[?2004h>     OMe2=(C2[0],C2[1],-face*1.0)
+[?2004l[?2004h>     c1,_=config(O1,C2,C6,Me1)  # priorities O, C2, C6, Me
+[?2004l[?2004h>     c2,_=config(OMe2,C1,C3,H4[:2]+(0,))  # H on C2 opposite original H? Use simple ring-plane H for config
+[?2004l[?2004h>     # Actually H2 at C2 should be opposite OMe2: if OMe2 z=-face, H2 z=+face
+[?2004l[?2004h>     H2=(C2[0],C2[1],face*1.0)
+[?2004l[?2004h>     c2,_=config(OMe2,C1,C3,H2)  # priorities O, C1, C3, H
+[?2004l[?2004h>     print('Epoxide from C4 iPr %s, O face %s => final C1 %s C2 %s (configs %s%s4R)'%(label,'down' if face==-1 else 'up',c1,c2,c1,c2))
+[?2004l[?2004h> PY
+[?2004lC4 iPr up => S
+C4 iPr down => R
+Epoxide from C4 iPr down, O face up => final C1 R C2 R (configs RR4R)
+[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def det3(a,b,c): return dot(a,cross(b,c))
+[?2004l[?2004h> def config(v1,v2,v3,v4):
+[?2004l[?2004h>     D=det3(sub(v1,v4),sub(v2,v4),sub(v3,v4))
+[?2004l[?2004h>     return ('S' if D>0 else 'R'),D
+[?2004l[?2004h> 
+[?2004l[?2004h> # planar ring
+[?2004l[?2004h> C1=(-1,0,0); C2=(-0.5,0.866,0); C3=(0.5,0.866,0)
+[?2004l[?2004h> C4=(1,0,0); C5=(0.5,-0.866,0); C6=(-0.5,-0.866,0)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C4 iPr down => R; confirm
+[?2004l[?2004h> for ipr,h4 in [((1,0,-1),(1,0,1)),((1,0,1),(1,0,-1))]:
+[?2004l[?2004h>     print('C4 test iPr',ipr,'=>',config(ipr,C3,C5,h4)[0])
+[?2004l[?2004h> 
+[?2004l[?2004h> # choose iPr down i.e. C4 R
+[?2004l[?2004h> ipr=(1,0,-1); h4=(1,0,1); c4,D4=config(ipr,C3,C5,h4)
+[?2004l[?2004h> print('C4:',c4)
+[?2004l[?2004h> 
+[?2004l[?2004h> # top-face epoxidation (oxygen up) then anti opening at C2 with OMe down
+[?2004l[?2004h> # C1 after opening: OH up, methyl down. C2 after opening: OMe down, H up (anti to original epoxide O up)
+[?2004l[?2004h> O1=(C1[0],C1[1],1); Me1=(C1[0],C1[1],-1)
+[?2004l[?2004h> OMe2=(C2[0],C2[1],-1); H2=(C2[0],C2[1],1)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C1 priorities: O, C2, C6, Me
+[?2004l[?2004h> c1,D1=config(O1,C2,C6,Me1)
+[?2004l[?2004h> # C2 priorities: O, C1, C3, H
+[?2004l[?2004h> c2,D2=config(OMe2,C1,C3,H2)
+[?2004l[?2004h> print('Final from top epoxidation/anti opening: C1',c1,'C2',c2,'C4',c4)
+[?2004l[?2004h> 
+[?2004l[?2004h> # bottom-face epoxidation then anti opening
+[?2004l[?2004h> O1b=(C1[0],C1[1],-1); Me1b=(C1[0],C1[1],1)
+[?2004l[?2004h> OMe2b=(C2[0],C2[1],1); H2b=(C2[0],C2[1],-1)
+[?2004l[?2004h> c1b,_=config(O1b,C2,C6,Me1b)
+[?2004l[?2004h> c2b,_=config(OMe2b,C1,C3,H2b)
+[?2004l[?2004h> print('Final from bottom epoxidation/anti opening: C1',c1b,'C2',c2b,'C4',c4)
+[?2004l[?2004h> PY
+[?2004lC4 test iPr (1, 0, -1) => R
+C4 test iPr (1, 0, 1) => S
+C4: R
+Final from top epoxidation/anti opening: C1 R C2 R C4 R
+Final from bottom epoxidation/anti opening: C1 S C2 S C4 R
+[?2004hroot@928ac53cdef4:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def det3(a,b,c): return dot(a,cross(b,c))
+[?2004l[?2004h> def config(v1,v2,v3,v4):
+[?2004l[?2004h>     D=det3(sub(v1,v4),sub(v2,v4),sub(v3,v4))
+[?2004l[?2004h>     return ('S' if D>0 else 'R'),D
+[?2004l[?2004h> 
+[?2004l[?2004h> # planar ring
+[?2004l[?2004h> C1=(-1,0,0); C2=(-0.5,0.866,0); C3=(0.5,0.866,0)
+[?2004l[?2004h> C4=(1,0,0); C5=(0.5,-0.866,0); C6=(-0.5,-0.866,0)
+[?2004l[?2004h> 
+[?2004l[?2004h> for ipr_sign in [1,-1]:
+[?2004l[?2004h>     ipr=(1,0,ipr_sign); H4=(1,0,-ipr_sign)
+[?2004l[?2004h>     c4,D=config(ipr,C3,C5,H4)
+[?2004l[?2004h>     print('C4 iPr', 'up' if ipr_sign>0 else 'down', '=>',c4,'det %.3f'%D)
+[?2004l[?2004h> 
+[?2004l[?2004h> # choose iPr down = R
+[?2004l[?2004h> ipr=(1,0,-1); H4=(1,0,1)
+[?2004l[?2004h> c4,_=config(ipr,C3,C5,H4)
+[?2004l[?2004h> print('\nUsing C4 iPr down, C4 =',c4)
+[?2004l[?2004h> for o1_sign in [1,-1]:
+[?2004l[?2004h>     for o2_sign in [1,-1]:
+[?2004l[?2004h>         O1=(C1[0],C1[1],o1_sign)
+[?2004l[?2004h>         Me1=(C1[0],C1[1],-o1_sign)
+[?2004l[?2004h>         O2=(C2[0],C2[1],o2_sign)
+[?2004l[?2004h>         H2=(C2[0],C2[1],-o2_sign)
+[?2004l[?2004h>         c1,_=config(O1,C2,C6,Me1)  # priority O > C2 > C6 > Me
+[?2004l[?2004h>         c2,_=config(O2,C1,C3,H2)  # priority O > C1 > C3 > H
+[?2004l[?2004h>         rel='trans' if o1_sign*o2_sign<0 else 'cis'
+[?2004l[?2004h>         print('O1 %s, OMe2 %s (%s) => C1 %s, C2 %s, C4 %s => %s%s%s'%(
+[?2004l[?2004h>             'up' if o1_sign>0 else 'down', 'up' if o2_sign>0 else 'down', rel, c1,c2,c4,c1,c2,c4))
+[?2004l[?2004h> PY
+[?2004lC4 iPr up => S det 1.732
+C4 iPr down => R det -1.732
+
+Using C4 iPr down, C4 = R
+O1 up, OMe2 up (cis) => C1 R, C2 S, C4 R => RSR
+O1 up, OMe2 down (trans) => C1 R, C2 R, C4 R => RRR
+O1 down, OMe2 up (trans) => C1 S, C2 S, C4 R => SSR
+O1 down, OMe2 down (cis) => C1 S, C2 R, C4 R => SRR
+[?2004hroot@928ac53cdef4:/app# 

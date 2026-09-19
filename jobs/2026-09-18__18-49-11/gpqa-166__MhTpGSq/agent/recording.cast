@@ -1,0 +1,13 @@
+{"version": 2, "width": 160, "height": 40, "timestamp": 1789779905, "env": {"SHELL": "/bin/bash", "TERM": "tmux-256color"}}
+[0.006419, "o", "\u001b[?2004hroot@55922e8aacd3:/app# "]
+[0.83287, "i", "clear\r"]
+[0.833122, "o", "clear\r\n\u001b[?2004l\r"]
+[0.834164, "o", "\u001b[H\u001b[J\u001b[3J"]
+[0.834238, "o", "\u001b[?2004hroot@55922e8aacd3:/app# "]
+[59.69986, "i", "python3 - <<'PY'\nimport math\nalpha = 0.5\nx = math.exp(-2 * alpha**2)\nn = alpha**2 * (1 + x) / (1 - x)\nS = (n + 1) * math.log(n + 1) - n * math.log(n)\nprint('x =', x)\nprint('nbar =', n)\nprint('S(tau) =', S)\nPY\n"]
+[59.700685, "o", "python3 - <<'PY'\r\n\u001b[?2004l\r\u001b[?2004h> import math\r\n\u001b[?2004l\r\u001b[?2004h> alpha = 0.5\r\n\u001b[?2004l\r\u001b[?2004h> x = math.exp(-2 * alpha**2)\r\n\u001b[?2004l\r\u001b[?2004h> n = alpha**2 * (1 + x) / (1 - x)\r\n\u001b[?2004l\r\u001b[?2004h> S = (n + 1) * math.log(n + 1) - n * math.log(n)\r\n\u001b[?2004l\r\u001b[?2004h> print('x =', x)\r\n\u001b[?2004l\r\u001b[?2004h> print('nbar =', n)\r\n\u001b[?2004l\r\u001b[?2004h> print('S(tau) =', S)\r\n\u001b[?2004l\r\u001b[?2004h> PY\r\n\u001b[?2004l\r"]
+[59.709226, "o", "x = 0.6065306597126334\r\nnbar = 1.0207470412683992\r\nS(tau) = 1.4005686073112968\r\n"]
+[59.711338, "o", "\u001b[?2004hroot@55922e8aacd3:/app# "]
+[113.739905, "i", "echo -n \"A\" > /app/answer.txt\n"]
+[113.740314, "o", "echo -n \"A\" > /app/answer.txt\r\n\u001b[?2004l\r"]
+[113.740941, "o", "\u001b[?2004hroot@55922e8aacd3:/app# "]

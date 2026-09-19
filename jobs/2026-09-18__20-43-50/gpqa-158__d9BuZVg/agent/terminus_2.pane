@@ -1,0 +1,25 @@
+[?2004hroot@a3a4b0fd8433:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@a3a4b0fd8433:/app# clear
+[?2004l[H[J[3J[?2004hroot@a3a4b0fd8433:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> z = 790.0/121.6 - 1.0
+[?2004l[?2004h> H0 = 70.0
+[?2004l[?2004h> c = 299792.458
+[?2004l[?2004h> N = 200000
+[?2004l[?2004h> integral = 0.0
+[?2004l[?2004h> for i in range(N):
+[?2004l[?2004h>     z1 = z*i/N
+[?2004l[?2004h>     z2 = z*(i+1)/N
+[?2004l[?2004h>     def E(x):
+[?2004l[?2004h>         return math.sqrt(0.3*(1.0+x)**3 + 0.7)
+[?2004l[?2004h>     integral += 0.5*(1.0/E(z1) + 1.0/E(z2))*(z2-z1)
+[?2004l[?2004h> D = c/H0 * integral
+[?2004l[?2004h> print(f'redshift z = {z:.6f}')
+[?2004l[?2004h> print(f'comoving distance = {D:.3f} Mpc = {D/1000:.3f} Gpc')
+[?2004l[?2004h> PY
+[?2004lredshift z = 5.496711
+comoving distance = 8023.094 Mpc = 8.023 Gpc
+[?2004hroot@a3a4b0fd8433:/app# echo -n "C" > /app/answer.txt
+[?2004l[?2004hroot@a3a4b0fd8433:/app# 

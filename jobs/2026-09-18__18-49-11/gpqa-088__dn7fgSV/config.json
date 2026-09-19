@@ -1,0 +1,13 @@
+{
+    "task": {
+        "path": "tasks\\gpqa_diamond\\gpqa-088",
+        "source": "gpqa_diamond"
+    },
+    "trial_name": "gpqa-088__dn7fgSV",
+    "trials_dir": "jobs\\2026-09-18__18-49-11",
+    "agent": {
+        "name": "terminus-2",
+        "model_name": "deepseek/deepseek-flash"
+    },
+    "job_id": "f7d5c32d-1ab8-4330-96c6-ee5d8b8f1633"
+}

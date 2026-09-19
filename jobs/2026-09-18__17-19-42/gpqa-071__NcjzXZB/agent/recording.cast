@@ -1,0 +1,12 @@
+{"version": 2, "width": 160, "height": 40, "timestamp": 1789771449, "env": {"SHELL": "/bin/bash", "TERM": "tmux-256color"}}
+[0.005124, "o", "\u001b[?2004hroot@ac2bbdf6fae5:/app# "]
+[0.937799, "i", "clear\r"]
+[0.938561, "o", "clear\r\n\u001b[?2004l\r"]
+[0.939455, "o", "\u001b[H\u001b[J\u001b[3J"]
+[0.941458, "o", "\u001b[?2004hroot@ac2bbdf6fae5:/app# "]
+[528.03343, "i", "python3 -c \"import networkx; print('networkx', networkx.__version__)\" 2>/dev/null; python3 -c \"import rdkit; print('rdkit', rdkit.__version__)\" 2>/dev/null\n"]
+[528.034107, "o", "python3 -c \"import networkx; print('networkx', networkx.__version__)\" 2>/dev/null; python3 -c \"import rdkit; print('rdkit', rdkit.__version__)\" 2>/dev/null\r\n\u001b[?2004l\r"]
+[528.059408, "o", "\u001b[?2004hroot@ac2bbdf6fae5:/app# "]
+[836.613995, "i", "echo -n \"B\" > /app/answer.txt\n"]
+[836.614354, "o", "echo -n \"B\" > /app/answer.txt\r\n\u001b[?2004l\r"]
+[836.61482, "o", "\u001b[?2004hroot@ac2bbdf6fae5:/app# "]

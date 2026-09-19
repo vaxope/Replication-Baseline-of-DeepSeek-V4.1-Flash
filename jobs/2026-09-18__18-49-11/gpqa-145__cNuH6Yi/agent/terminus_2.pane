@@ -1,0 +1,580 @@
+[?2004hroot@65b17c6365a0:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@65b17c6365a0:/app# clear
+[?2004l[H[J[3J[?2004hroot@65b17c6365a0:/app# python3 -c "import rdkit; print(rdkit.__version__)"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'rdkit'
+[?2004hroot@65b17c6365a0:/app# which obabel || true
+[?2004l[?2004hroot@65b17c6365a0:/app# python3 -c "import numpy; print('numpy', numpy.__version__)" 2>/dev/null || true
+[?2004l[?2004hroot@65b17c6365a0:/app# pip list 2>/dev/null | head -50
+[?2004l[?2004hroot@65b17c6365a0:/app# cat > /tmp/assign.py <<'PY'
+[?2004l[?2004h> import numpy as np
+[?2004l[?2004h> 
+[?2004l[?2004h> # Coordinates for approximate norbornene anhydride core
+[?2004l[?2004h> C4 = np.array([-1.0, 0.0, 0.0])
+[?2004l[?2004h> C7 = np.array([1.0, 0.0, 0.0])
+[?2004l[?2004h> C8 = np.array([0.0, 1.0, 0.0])
+[?2004l[?2004h> C5 = np.array([-0.8, -1.0, 0.5])
+[?2004l[?2004h> C6 = np.array([0.8, -1.0, 0.5])
+[?2004l[?2004h> C3a = np.array([-0.8, -1.0, -0.5])
+[?2004l[?2004h> C7a = np.array([0.8, -1.0, -0.5])
+[?2004l[?2004h> 
+[?2004l[?2004h> # Anhydride ring coordinates C3a-C1-O2-C3-C7a
+[?2004l[?2004h> C1 = np.array([-0.8, -1.6, -1.2])
+[?2004l[?2004h> C3 = np.array([0.8, -1.6, -1.2])
+[?2004l[?2004h> O2 = np.array([0.0, -2.2, -0.8])
+[?2004l[?2004h> O1 = np.array([-1.6, -1.6, -1.8])
+[?2004l[?2004h> O3 = np.array([1.6, -1.6, -1.8])
+[?2004l[?2004h> 
+[?2004l[?2004h> atoms = {'C4':C4,'C7':C7,'C8':C8,'C5':C5,'C6':C6,'C3a':C3a,'C7a':C7a,'C1':C1,'C3':C3,'O2':O2,'O1':O1,'O3':O3}
+[?2004l[?2004h> 
+[?2004l[?2004h> def h_at(center, bs):
+[?2004l[?2004h>     c = atoms[center]
+[?2004l[?2004h>     v = np.zeros(3)
+[?2004l[?2004h>     for b in bs:
+[?2004l[?2004h>         u = atoms[b]-c
+[?2004l[?2004h>         u = u/np.linalg.norm(u)
+[?2004l[?2004h>         v += u
+[?2004l[?2004h>     return c - 0.7*v/np.linalg.norm(v)
+[?2004l[?2004h> 
+[?2004l[?2004h> atoms['H4'] = h_at('C4', ['C8','C5','C3a'])
+[?2004l[?2004h> atoms['H7'] = h_at('C7', ['C8','C6','C7a'])
+[?2004l[?2004h> atoms['H3a'] = h_at('C3a', ['C1','C4','C7a'])
+[?2004l[?2004h> atoms['H7a'] = h_at('C7a', ['C3','C7','C3a'])
+[?2004l[?2004h> 
+[?2004l[?2004h> def orient(center, p1, p2, p3, p4):
+[?2004l[?2004h>     c=atoms[center]
+[?2004l[?2004h>     v1=atoms[p1]-c; v2=atoms[p2]-c; v3=atoms[p3]-c; v4=atoms[p4]-c
+[?2004l[?2004h>     vol = np.dot(v1-v4, np.cross(v2-v4, v3-v4))
+[?2004l[?2004h>     return vol
+[?2004l[?2004h> 
+[?2004l[?2004h> # Derived CIP priorities: 1,2,3,4
+[?2004l[?2004h> centers={
+[?2004l[?2004h>  'C4': ['C8','C3a','C5','H4'],
+[?2004l[?2004h>  'C7': ['C8','C7a','C6','H7'],
+[?2004l[?2004h>  'C3a': ['C1','C4','C7a','H3a'],
+[?2004l[?2004h>  'C7a': ['C3','C7','C4','H7a'],
+[?2004l[?2004h> }
+[?2004l[?2004h> for cname, pr in centers.items():
+[?2004l[?2004h>     vol=orient(cname,*pr)
+[?2004l[?2004h>     print(cname, 'triple product=', round(vol,4), 'core sign={:+.0f}'.format(np.sign(vol)))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C8 with F front (+z, toward alkene) or back (-z, toward anhydride).
+[?2004l[?2004h> for fz in [0.8,-0.8]:
+[?2004l[?2004h>     Fpos = C8 + np.array([0.0, 0.6, fz])
+[?2004l[?2004h>     H8pos = C8 + np.array([0.0, 0.6, -fz])
+[?2004l[?2004h>     atoms2 = dict(atoms)
+[?2004l[?2004h>     atoms2['F'] = Fpos
+[?2004l[?2004h>     atoms2['H8'] = H8pos
+[?2004l[?2004h>     # Use pseudoasymmetric/geometric substitute: F gets priority 1, H 4,
+[?2004l[?2004h>     # and paths via C7/C4 get priorities 2/3 according to R/S ordering.
+[?2004l[?2004h>     # For the core skeleton shown, C7 is R and C4 is S; R > S.
+[?2004l[?2004h>     def orient2(center, p1,p2,p3,p4):
+[?2004l[?2004h>         c=atoms2[center]
+[?2004l[?2004h>         v1=atoms2[p1]-c; v2=atoms2[p2]-c; v3=atoms2[p3]-c; v4=atoms2[p4]-c
+[?2004l[?2004h>         return np.dot(v1-v4, np.cross(v2-v4, v3-v4))
+[?2004l[?2004h>     vol = orient2('C8','F','C7','C4','H8')
+[?2004l[?2004h>     print('Fz=',fz,' C8 triple product=',round(vol,4),'sign=',np.sign(vol))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@65b17c6365a0:/app# python3 /tmp/assign.py
+[?2004lTraceback (most recent call last):
+  File "/tmp/assign.py", line 1, in <module>
+    import numpy as np
+ModuleNotFoundError: No module named 'numpy'
+[?2004hroot@65b17c6365a0:/app# cat > /tmp/assign_pure.py <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> # Pure vector helpers
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b):
+[?2004l[?2004h>     return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a)
+[?2004l[?2004h>     return tuple(x/n for x in a)
+[?2004l[?2004h> def triple(c,p1,p2,p3,p4,pos):
+[?2004l[?2004h>     v1=sub(pos[p1],pos[p4]); v2=sub(pos[p2],pos[p4]); v3=sub(pos[p3],pos[p4])
+[?2004l[?2004h>     return dot(v1,cross(v2,v3))
+[?2004l[?2004h> 
+[?2004l[?2004h> # approximate core coordinates
+[?2004l[?2004h> C4=(-1.0,0.0,0.0); C7=(1.0,0.0,0.0); C8=(0.0,0.0,1.0)
+[?2004l[?2004h> C5=(-0.65,1.0,-0.4); C6=(0.65,1.0,-0.4)
+[?2004l[?2004h> C3a=(-0.65,-1.0,-0.4); C7a=(0.65,-1.0,-0.4)
+[?2004l[?2004h> pos={'C4':C4,'C7':C7,'C8':C8,'C5':C5,'C6':C6,'C3a':C3a,'C7a':C7a}
+[?2004l[?2004h> 
+[?2004l[?2004h> def make_h(center, bonded):
+[?2004l[?2004h>     c=pos[center]
+[?2004l[?2004h>     s=[0.0,0.0,0.0]
+[?2004l[?2004h>     for b in bonded:
+[?2004l[?2004h>         u=unit(sub(pos[b],c)); s=add(s,u)
+[?2004l[?2004h>     return add(c,mul(unit(s),-1.05))
+[?2004l[?2004h> 
+[?2004l[?2004h> # bridgehead and bridge H atoms
+[?2004l[?2004h> pos['H4']=make_h('C4',['C3a','C5','C8'])
+[?2004l[?2004h> pos['H7']=make_h('C7',['C7a','C6','C8'])
+[?2004l[?2004h> # H at fused anhydride carbons (temporary without C1/C3)
+[?2004l[?2004h> pos['H3a']=make_h('C3a',['C4','C7a'])
+[?2004l[?2004h> pos['H7a']=make_h('C7a',['C7','C3a'])
+[?2004l[?2004h> 
+[?2004l[?2004h> # anhydride ring carbon directions at C3a/C7a from tetrahedral geometry
+[?2004l[?2004h> def missing_dir(center, known):
+[?2004l[?2004h>     c=pos[center]; s=[0.0,0.0,0.0]
+[?2004l[?2004h>     for b in known:
+[?2004l[?2004h>         s=add(s,unit(sub(pos[b],c)))
+[?2004l[?2004h>     return mul(unit(s),-1.0)
+[?2004l[?2004h> 
+[?2004l[?2004h> pos['C1']=add(pos['C3a'], mul(missing_dir('C3a',['C4','C7a','H3a']),1.52))
+[?2004l[?2004h> pos['C3']=add(pos['C7a'], mul(missing_dir('C7a',['C7','C3a','H7a']),1.52))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C8 substituent directions from tetrahedral local geometry
+[?2004l[?2004h> a=unit(sub(pos['C4'],pos['C8'])); b=unit(sub(pos['C7'],pos['C8']))
+[?2004l[?2004h> n=unit(cross(a,b))
+[?2004l[?2004h> m=unit(mul(add(a,b),-1.0))
+[?2004l[?2004h> cos_t=norm(add(a,b))/2.0
+[?2004l[?2004h> sin_t=math.sqrt(max(0.0,1.0-cos_t*cos_t))
+[?2004l[?2004h> c_dir=add(mul(m,cos_t),mul(n,sin_t))
+[?2004l[?2004h> d_dir=add(mul(m,cos_t),mul(n,-sin_t))
+[?2004l[?2004h> # choose c_dir as the more positive-y (exo, toward alkene bridge); d_dir is endo
+[?2004l[?2004h> if c_dir[1] < d_dir[1]:
+[?2004l[?2004h>     c_dir,d_dir=d_dir,c_dir
+[?2004l[?2004h> 
+[?2004l[?2004h> # endo anhydride with either exo-F or endo-F
+[?2004l[?2004h> for label, f_dir, h_dir in [
+[?2004l[?2004h>     ('exo-F (F toward alkene bridge)', c_dir, d_dir),
+[?2004l[?2004h>     ('endo-F (F toward anhydride bridge)', d_dir, c_dir),
+[?2004l[?2004h> ]:
+[?2004l[?2004h>     p=dict(pos)
+[?2004l[?2004h>     p['F']=add(p['C8'], mul(f_dir,1.39))
+[?2004l[?2004h>     p['H8']=add(p['C8'], mul(h_dir,1.10))
+[?2004l[?2004h>     print('\n',label)
+[?2004l[?2004h>     centers={
+[?2004l[?2004h>       'C4':['C8','C3a','C5','H4'],
+[?2004l[?2004h>       'C7':['C8','C7a','C6','H7'],
+[?2004l[?2004h>       'C3a':['C1','C7a','C4','H3a'],
+[?2004l[?2004h>       'C7a':['C3','C3a','C7','H7a'],
+[?2004l[?2004h>     }
+[?2004l[?2004h>     for cname, pr in centers.items():
+[?2004l[?2004h>         vol=triple(cname,*pr,p)
+[?2004l[?2004h>         # calibrate sign separately if needed; print both sign and provisional label
+[?2004l[?2004h>         print(cname, 'vol=%+.4f'%vol, 'sign=%+d'%(1 if vol>0 else -1))
+[?2004l[?2004h>     # C8 pseudoasymmetric center; provisional priority F > R ligand > S ligand > H
+[?2004l[?2004h>     for corename, pr in [
+[?2004l[?2004h>         ('core A/D: C4=S,C7=R => at C8 priority C7 then C4', ['F','C7','C4','H8']),
+[?2004l[?2004h>         ('core B/C: C4=R,C7=S => at C8 priority C4 then C7', ['F','C4','C7','H8']),
+[?2004l[?2004h>     ]:
+[?2004l[?2004h>         vol=triple('C8',*pr,p)
+[?2004l[?2004h>         print(corename, 'vol=%+.4f'%vol, 'sign=%+d'%(1 if vol>0 else -1))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@65b17c6365a0:/app# python3 /tmp/assign_pure.py
+[?2004l
+ exo-F (F toward alkene bridge)
+C4 vol=+4.4393 sign=+1
+C7 vol=-4.4393 sign=-1
+C3a vol=+0.0000 sign=+1
+C7a vol=-0.0000 sign=-1
+core A/D: C4=S,C7=R => at C8 priority C7 then C4 vol=+6.5794 sign=+1
+core B/C: C4=R,C7=S => at C8 priority C4 then C7 vol=-6.5794 sign=-1
+
+ endo-F (F toward anhydride bridge)
+C4 vol=+4.4393 sign=+1
+C7 vol=-4.4393 sign=-1
+C3a vol=+0.0000 sign=+1
+C7a vol=-0.0000 sign=-1
+core A/D: C4=S,C7=R => at C8 priority C7 then C4 vol=-6.5794 sign=-1
+core B/C: C4=R,C7=S => at C8 priority C4 then C7 vol=+6.5794 sign=+1
+[?2004hroot@65b17c6365a0:/app# cat > /tmp/full_assign.py <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> 
+[?2004l[?2004h> def triple(center,p1,p2,p3,p4,pos):
+[?2004l[?2004h>     v1=sub(pos[p1],pos[p4]); v2=sub(pos[p2],pos[p4]); v3=sub(pos[p3],pos[p4])
+[?2004l[?2004h>     return dot(v1,cross(v2,v3))
+[?2004l[?2004h> 
+[?2004l[?2004h> def fourth_dir(center, known, pos):
+[?2004l[?2004h>     c=pos[center]; s=[0.0,0.0,0.0]
+[?2004l[?2004h>     for b in known:
+[?2004l[?2004h>         s=add(s,unit(sub(pos[b],c)))
+[?2004l[?2004h>     return mul(unit(s),-1.0)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Reference: simple tetrahedral center at origin, priorities 1-4 known.
+[?2004l[?2004h> # Put p4 on -z (away), p1/p2/p3 around z=0.
+[?2004l[?2004h> ref={'C':(0,0,0)}
+[?2004l[?2004h> # Looking down +z from p4? If p4 away from viewer, viewer at +z looking -z.
+[?2004l[?2004h> # Place p1 +x, p2 +y, p3 -x, p4 -z. Viewed from +z, p1->p2->p3 is counterclockwise?
+[?2004l[?2004h> ref['p1']=(1,0,0); ref['p2']=(0,1,0); ref['p3']=(-1,0,0); ref['p4']=(0,0,-1)
+[?2004l[?2004h> rv=triple('C','p1','p2','p3','p4',ref)
+[?2004l[?2004h> print('reference triple sign', rv)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Base norbornene-like skeleton coordinates
+[?2004l[?2004h> pos={
+[?2004l[?2004h>  'A':(-1.2,0.0,0.0),  # product C4 bridgehead
+[?2004l[?2004h>  'D':( 1.2,0.0,0.0),  # product C7 bridgehead
+[?2004l[?2004h>  'B':(-0.6,1.0,-0.4), # former diene internal, product C5
+[?2004l[?2004h>  'C':( 0.6,1.0,-0.4), # product C6
+[?2004l[?2004h>  'F':(-0.6,-1.0,-0.4),# former maleic C, product C3a
+[?2004l[?2004h>  'G':( 0.6,-1.0,-0.4),# product C7a
+[?2004l[?2004h>  'E':(0.0,0.0,1.0),    # C8 methano bridge
+[?2004l[?2004h> }
+[?2004l[?2004h> # Add approximate anhydride carbonyl carbons C1 (from F) and C3 (from G).
+[?2004l[?2004h> pos['K1']=(-0.9,-1.6,-1.0)
+[?2004l[?2004h> pos['K3']=( 0.9,-1.6,-1.0)
+[?2004l[?2004h> # Add bridgehead H atoms using tetrahedral direction of remaining bonds
+[?2004l[?2004h> pos['H_A']=add(pos['A'],mul(fourth_dir('A',['E','B','F'],pos),1.0))
+[?2004l[?2004h> pos['H_D']=add(pos['D'],mul(fourth_dir('D',['E','C','G'],pos),1.0))
+[?2004l[?2004h> # H at F/G, approximate
+[?2004l[?2004h> pos['H_F']=add(pos['F'],mul(fourth_dir('F',['A','G','K1'],pos),1.0))
+[?2004l[?2004h> pos['H_G']=add(pos['G'],mul(fourth_dir('G',['D','F','K3'],pos),1.0))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C4=A and C7=D priority: E (C8-F) > anhydride path F/G > alkene B/C > H
+[?2004l[?2004h> print('\nSkeleton only (generic anhydride position):')
+[?2004l[?2004h> volA=triple('A','E','F','B','H_A',pos)
+[?2004l[?2004h> volD=triple('D','E','G','C','H_D',pos)
+[?2004l[?2004h> print('A/C4 vol',volA,'D/C7 vol',volD)
+[?2004l[?2004h> # sign convention: reference with p1->p2->p3 when viewed with p4 away may be R or S; compute
+[?2004l[?2004h> # For reference, p4 is away; p1(+x)->p2(+y)->p3(-x) is counterclockwise if looking from +z.
+[?2004l[?2004h> # Let's determine actual from coordinate orientation manually: viewer at +z, x right, y up.
+[?2004l[?2004h> # p1 right -> p2 up -> p3 left is counterclockwise? from right to up is CCW, up to left CCW. CCW = S.
+[?2004l[?2004h> # Thus reference with triple sign rv corresponds to S; if rv positive -> S, negative -> R (for this particular order).
+[?2004l[?2004h> print('Interpretation: positive reference sign -> S, negative -> R')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Anhydride carbonyl positions can flip endo/exo, but core A/D may not change much.
+[?2004l[?2004h> # Add carbonyls above (toward E) for endo / below for exo, and recompute C3a/C7a later.
+[?2004l[?2004h> for mode,k1,k3 in [('endo-carbonyls-up',(-0.9,-1.6,0.4),(0.9,-1.6,0.4)),
+[?2004l[?2004h>                    ('exo-carbonyls-down',(-0.9,-1.6,-1.2),(0.9,-1.6,-1.2))]:
+[?2004l[?2004h>     p=dict(pos); p['K1']=k1; p['K3']=k3
+[?2004l[?2004h>     p['H_F']=add(p['F'],mul(fourth_dir('F',['A','G','K1'],p),1.0))
+[?2004l[?2004h>     p['H_G']=add(p['G'],mul(fourth_dir('G',['D','F','K3'],p),1.0))
+[?2004l[?2004h>     print('\n',mode)
+[?2004l[?2004h>     print('A/C4 vol',triple('A','E','F','B','H_A',p))
+[?2004l[?2004h>     print('D/C7 vol',triple('D','E','G','C','H_D',p))
+[?2004l[?2004h>     # At F (C3a), CIP priorities likely K1 (carbonyl) > A (bridgehead) vs G (other C) vs H.
+[?2004l[?2004h>     # At G similarly K3 > D vs F. Print both possible priority choices.
+[?2004l[?2004h>     # Compare carbonyl carbon vs bridgehead/other carbon: carbonyl attached O,O,G; A attached E,B,F; G attached D,F,K3.
+[?2004l[?2004h>     # Carbonyl should be priority 1. A vs G priority difficult; print both.
+[?2004l[?2004h>     for label,pr in [
+[?2004l[?2004h>        ('F: K1>A>G>H',['K1','A','G','H_F']),
+[?2004l[?2004h>        ('F: K1>G>A>H',['K1','G','A','H_F']),
+[?2004l[?2004h>        ('G: K3>D>F>H',['K3','D','F','H_G']),
+[?2004l[?2004h>        ('G: K3>F>D>H',['K3','F','D','H_G']),
+[?2004l[?2004h>     ]:
+[?2004l[?2004h>        print(label, triple(label.split(':')[0],*pr,p))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@65b17c6365a0:/app# python3 /tmp/full_assign.py
+[?2004lreference triple sign 2
+
+Skeleton only (generic anhydride position):
+A/C4 vol 4.965960523684256 D/C7 vol -4.965960523684256
+Interpretation: positive reference sign -> S, negative -> R
+
+ endo-carbonyls-up
+A/C4 vol 4.965960523684256
+D/C7 vol -4.965960523684256
+F: K1>A>G>H -4.100095707415321
+F: K1>G>A>H 4.100095707415321
+G: K3>D>F>H 4.100095707415321
+G: K3>F>D>H -4.100095707415321
+
+ exo-carbonyls-down
+A/C4 vol 4.965960523684256
+D/C7 vol -4.965960523684256
+F: K1>A>G>H 3.853263350298645
+F: K1>G>A>H -3.853263350298645
+G: K3>D>F>H -3.853263350298645
+G: K3>F>D>H 3.853263350298645
+[?2004hroot@65b17c6365a0:/app# cat > /tmp/model2.py <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a)
+[?2004l[?2004h>     return tuple(x/n for x in a)
+[?2004l[?2004h> def triple(center,p1,p2,p3,p4,pos):
+[?2004l[?2004h>     v1=sub(pos[p1],pos[p4]); v2=sub(pos[p2],pos[p4]); v3=sub(pos[p3],pos[p4])
+[?2004l[?2004h>     return dot(v1,cross(v2,v3))
+[?2004l[?2004h> def fourth(center, known, pos, blen=1.05):
+[?2004l[?2004h>     c=pos[center]; s=[0.0,0.0,0.0]
+[?2004l[?2004h>     for b in known:
+[?2004l[?2004h>         s=add(s,unit(sub(pos[b],c)))
+[?2004l[?2004h>     return add(c,mul(unit(s),-blen))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Reference: p4 away, 1->2->3 CCW gives S; positive triple -> S
+[?2004l[?2004h> ref={'C':(0.0,0.0,0.0),'p1':(1,0,0),'p2':(0,1,0),'p3':(-1,0,0),'p4':(0,0,-1)}
+[?2004l[?2004h> rt=triple('C','p1','p2','p3','p4',ref)
+[?2004l[?2004h> print('ref triple',rt,'positive means S')
+[?2004l[?2004h> 
+[?2004l[?2004h> def label(val):
+[?2004l[?2004h>     return 'S' if val>0 else 'R'
+[?2004l[?2004h> 
+[?2004l[?2004h> # Product graph coordinates, option numbering
+[?2004l[?2004h> pos={
+[?2004l[?2004h>  'C4':(-1.0,0.3,0.0),
+[?2004l[?2004h>  'C7':( 1.0,0.3,0.0),
+[?2004l[?2004h>  'C5':(-0.6,1.25,0.55),
+[?2004l[?2004h>  'C6':( 0.6,1.25,0.55),
+[?2004l[?2004h>  'C3a':(-0.6,-0.8,-0.2),
+[?2004l[?2004h>  'C7a':( 0.6,-0.8,-0.2),
+[?2004l[?2004h>  'C8':( 0.0,0.0,1.05),
+[?2004l[?2004h> }
+[?2004l[?2004h> # anhydride below ring
+[?2004l[?2004h> pos['C1']=(-0.9,-1.65,-0.95)
+[?2004l[?2004h> pos['C3']=( 0.9,-1.65,-0.95)
+[?2004l[?2004h> # H at fused carbons: fourth tetrahedral direction from C4,C7a,C1
+[?2004l[?2004h> pos['H3a']=fourth('C3a',['C4','C7a','C1'],pos,1.05)
+[?2004l[?2004h> pos['H7a']=fourth('C7a',['C7','C3a','C3'],pos,1.05)
+[?2004l[?2004h> # H at bridgeheads: fourth direction from three ring neighbors
+[?2004l[?2004h> pos['H4']=fourth('C4',['C8','C5','C3a'],pos,1.05)
+[?2004l[?2004h> pos['H7']=fourth('C7',['C8','C6','C7a'],pos,1.05)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C8 F/H directions from tetrahedral local geometry
+[?2004l[?2004h> a=unit(sub(pos['C4'],pos['C8'])); b=unit(sub(pos['C7'],pos['C8']))
+[?2004l[?2004h> n=unit(cross(a,b)); m=unit(mul(add(a,b),-1.0))
+[?2004l[?2004h> cos_t=norm(add(a,b))/2.0
+[?2004l[?2004h> sin_t=math.sqrt(max(0.0,1.0-cos_t*cos_t))
+[?2004l[?2004h> d1=add(mul(m,cos_t),mul(n,sin_t))
+[?2004l[?2004h> d2=add(mul(m,cos_t),mul(n,-sin_t))
+[?2004l[?2004h> print('C8 directions d1',d1,'d2',d2)
+[?2004l[?2004h> 
+[?2004l[?2004h> for flabel,fdir in [('F above/positive-z',d1),('F below/negative-z',d2)]:
+[?2004l[?2004h>     p=dict(pos)
+[?2004l[?2004h>     p['F']=add(p['C8'],mul(fdir,1.39))
+[?2004l[?2004h>     p['H8']=add(p['C8'],mul(mul(fdir,-1.0),1.10))
+[?2004l[?2004h>     print('\n',flabel,'F',p['F'])
+[?2004l[?2004h>     # C4/C7/C3a/C7a priorities
+[?2004l[?2004h>     desc={}
+[?2004l[?2004h>     for c,pr in [
+[?2004l[?2004h>       ('C4',['C8','C3a','C5','H4']),
+[?2004l[?2004h>       ('C7',['C8','C7a','C6','H7']),
+[?2004l[?2004h>       ('C3a',['C1','C7a','C4','H3a']),
+[?2004l[?2004h>       ('C7a',['C3','C3a','C7','H7a'])]:
+[?2004l[?2004h>         t=triple(c,*pr,p); desc[c]=label(t)
+[?2004l[?2004h>         print(c,'vol=%+.4f'%t,desc[c])
+[?2004l[?2004h>     # C8 descriptors for possible core priorities
+[?2004l[?2004h>     for core,p2 in [('A/D core 4S,7R', 'C7'),('B/C core 4R,7S','C4')]:
+[?2004l[?2004h>         p3='C4' if p2=='C7' else 'C7'
+[?2004l[?2004h>         t=triple('C8','F',p2,p3,'H8',p)
+[?2004l[?2004h>         print('C8 for',core,'prio F>%s>%s>H:'%(p2,p3),'vol=%+.4f'%t,label(t))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@65b17c6365a0:/app# python3 /tmp/model2.py
+[?2004lref triple 2 positive means S
+C8 directions d1 (0.0, -0.8519727380586268, 0.5235861472622116) d2 (-0.0, 0.44676152998672225, 0.8946530809894544)
+
+ F above/positive-z F (0.0, -1.1842421059014911, 1.7777847446944741)
+C4 vol=+1.3127 S
+C7 vol=-1.3127 R
+C3a vol=-3.9736 R
+C7a vol=+3.9736 S
+C8 for A/D core 4S,7R prio F>C7>C4>H: vol=-3.6727 R
+C8 for B/C core 4R,7S prio F>C4>C7>H: vol=+3.6727 S
+
+ F below/negative-z F (0.0, 0.6209985266815439, 2.2935677825753418)
+C4 vol=+1.3127 S
+C7 vol=-1.3127 R
+C3a vol=-3.9736 R
+C7a vol=+3.9736 S
+C8 for A/D core 4S,7R prio F>C7>C4>H: vol=+3.6727 S
+C8 for B/C core 4R,7S prio F>C4>C7>H: vol=-3.6727 R
+[?2004hroot@65b17c6365a0:/app# cat > /tmp/model3.py <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a): return tuple(x/norm(a) for x in a)
+[?2004l[?2004h> def triple(center,p1,p2,p3,p4,p):
+[?2004l[?2004h>     v1=sub(p[p1],p[p4]); v2=sub(p[p2],p[p4]); v3=sub(p[p3],p[p4])
+[?2004l[?2004h>     return dot(v1,cross(v2,v3))
+[?2004l[?2004h> def desc(v): return 'S' if v>0 else 'R'
+[?2004l[?2004h> 
+[?2004l[?2004h> # Reference with p4 away; positive -> S
+[?2004l[?2004h> ref={'C':(0,0,0),'p1':(1,0,0),'p2':(0,1,0),'p3':(-1,0,0),'p4':(0,0,-1)}
+[?2004l[?2004h> print('ref', triple('C','p1','p2','p3','p4',ref))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Norbornane cage coordinates: C4/C7 bridgeheads on x axis,
+[?2004l[?2004h> # one-carbon bridge C8 on +y, alkene bridge C5=C6 on (-y,+z),
+[?2004l[?2004h> # anhydride bridge C3a-C7a on (-y,-z).
+[?2004l[?2004h> p={
+[?2004l[?2004h>  'C4':(-1.25,0,0),
+[?2004l[?2004h>  'C7':( 1.25,0,0),
+[?2004l[?2004h>  'C8':( 0.0,0.9,0.0),
+[?2004l[?2004h>  'C5':(-0.67,-0.8,1.1),
+[?2004l[?2004h>  'C6':( 0.67,-0.8,1.1),
+[?2004l[?2004h>  'C3a':(-0.77,-0.75,-1.15),
+[?2004l[?2004h>  'C7a':( 0.77,-0.75,-1.15),
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> def fourth(center, bonded, blen=1.05):
+[?2004l[?2004h>     c=p[center]; s=[0,0,0]
+[?2004l[?2004h>     for b in bonded:
+[?2004l[?2004h>         s=add(s,unit(sub(p[b],c)))
+[?2004l[?2004h>     return add(c,mul(unit(s),-blen))
+[?2004l[?2004h> 
+[?2004l[?2004h> # hydrogens at bridgeheads and C3a/C7a will be recomputed after choosing carbonyl positions
+[?2004l[?2004h> p['H4']=fourth('C4',['C8','C5','C3a'])
+[?2004l[?2004h> p['H7']=fourth('C7',['C8','C6','C7a'])
+[?2004l[?2004h> 
+[?2004l[?2004h> # helper to compute H once three other bonds fixed; C1/C3 vary
+[?2004l[?2004h> for face in ['endo_plus_z','exo_minus_z']:
+[?2004l[?2004h>     pp=dict(p)
+[?2004l[?2004h>     if face=='endo_plus_z':
+[?2004l[?2004h>         c1_dir=(0.0,0.2,1.0)
+[?2004l[?2004h>         c3_dir=(0.0,0.2,1.0)
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         c1_dir=(0.0,-0.2,-1.0)
+[?2004l[?2004h>         c3_dir=(0.0,-0.2,-1.0)
+[?2004l[?2004h>     pp['C1']=add(pp['C3a'],mul(unit(c1_dir),1.52))
+[?2004l[?2004h>     pp['C3']=add(pp['C7a'],mul(unit(c3_dir),1.52))
+[?2004l[?2004h>     # H opposite sum of other three bond vectors
+[?2004l[?2004h>     pp['H3a']=fourth('C3a',['C4','C7a','C1'],1.05)
+[?2004l[?2004h>     pp['H7a']=fourth('C7a',['C7','C3a','C3'],1.05)
+[?2004l[?2004h>     print('\nFace',face)
+[?2004l[?2004h>     for atom,pr in [
+[?2004l[?2004h>       ('C4',['C8','C3a','C5','H4']),
+[?2004l[?2004h>       ('C7',['C8','C7a','C6','H7']),
+[?2004l[?2004h>       ('C3a',['C1','C7a','C4','H3a']),
+[?2004l[?2004h>       ('C7a',['C3','C3a','C7','H7a']),
+[?2004l[?2004h>     ]:
+[?2004l[?2004h>         t=triple(atom,*pr,pp)
+[?2004l[?2004h>         print(atom, desc(t), 'val', round(t,3))
+[?2004l[?2004h>     # C8 F on +z and -z
+[?2004l[?2004h>     for fz in [1.0,-1.0]:
+[?2004l[?2004h>         q=dict(pp)
+[?2004l[?2004h>         q['F']=add(q['C8'],(0,0,fz*1.39))
+[?2004l[?2004h>         q['H8']=add(q['C8'],(0,0,-fz*1.09))
+[?2004l[?2004h>         # priorities in A/D core: F > C7(R) > C4(S) > H
+[?2004l[?2004h>         tA=triple('C8','F','C7','C4','H8',q)
+[?2004l[?2004h>         # priorities in B/C core: F > C4(R) > C7(S) > H
+[?2004l[?2004h>         tB=triple('C8','F','C4','C7','H8',q)
+[?2004l[?2004h>         print('  Fz',fz,'coreA/D ->',desc(tA),'coreB/C ->',desc(tB))
+[?2004l[?2004h> 
+[?2004l[?2004h>     # If core labels at C4/C7 are as output, choose appropriate C8
+[?2004l[?2004h>     t4=triple('C4','C8','C3a','C5','H4',pp); t7=triple('C7','C8','C7a','C6','H7',pp)
+[?2004l[?2004h>     print('  actual C4/C7:',desc(t4),desc(t7))
+[?2004l[?2004h>     for fz in [1.0,-1.0]:
+[?2004l[?2004h>         q=dict(pp); q['F']=add(q['C8'],(0,0,fz*1.39)); q['H8']=add(q['C8'],(0,0,-fz*1.09))
+[?2004l[?2004h>         if desc(t4)=='S' and desc(t7)=='R':
+[?2004l[?2004h>             t=triple('C8','F','C7','C4','H8',q)
+[?2004l[?2004h>         else:
+[?2004l[?2004h>             t=triple('C8','F','C4','C7','H8',q)
+[?2004l[?2004h>         print('  appropriate C8 desc Fz',fz,'=',desc(t))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@65b17c6365a0:/app# python3 /tmp/model3.py
+[?2004lref 2
+Traceback (most recent call last):
+  File "/tmp/model3.py", line 54, in <module>
+    pp['H3a']=fourth('C3a',['C4','C7a','C1'],1.05)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/model3.py", line 35, in fourth
+    s=add(s,unit(sub(p[b],c)))
+                     ~^^^
+KeyError: 'C1'
+[?2004hroot@65b17c6365a0:/app# cat > /tmp/stereo.py <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> def triple(center,p1,p2,p3,p4,p):
+[?2004l[?2004h>     v1=sub(p[p1],p[p4]); v2=sub(p[p2],p[p4]); v3=sub(p[p3],p[p4])
+[?2004l[?2004h>     return dot(v1,cross(v2,v3))
+[?2004l[?2004h> def label(v): return 'S' if v>0 else 'R'
+[?2004l[?2004h> def fourth(center, bonded, p, blen=1.05):
+[?2004l[?2004h>     c=p[center]; s=[0.0,0.0,0.0]
+[?2004l[?2004h>     for b in bonded:
+[?2004l[?2004h>         s=add(s,unit(sub(p[b],c)))
+[?2004l[?2004h>     return add(c,mul(unit(s),-blen))
+[?2004l[?2004h> 
+[?2004l[?2004h> # known reference: p4 away, 1->2->3 CCW is S, positive triple
+[?2004l[?2004h> ref={'C':(0,0,0),'p1':(1,0,0),'p2':(0,1,0),'p3':(-1,0,0),'p4':(0,0,-1)}
+[?2004l[?2004h> print('reference triple (positive -> S):', triple('C','p1','p2','p3','p4',ref))
+[?2004l[?2004h> 
+[?2004l[?2004h> base={
+[?2004l[?2004h>  'C4':(0.0,0.0,1.0),
+[?2004l[?2004h>  'C7':(0.0,0.0,-1.0),
+[?2004l[?2004h>  'C8':(0.0,1.0,0.0),
+[?2004l[?2004h>  # left bridge = alkene
+[?2004l[?2004h>  'C5':(-1.1,-0.6,0.75),
+[?2004l[?2004h>  'C6':(-1.1,-0.6,-0.75),
+[?2004l[?2004h>  # right bridge = anhydride
+[?2004l[?2004h>  'C3a':(1.1,-0.6,-0.75),
+[?2004l[?2004h>  'C7a':(1.1,-0.6,0.75),
+[?2004l[?2004h> }
+[?2004l[?2004h> base['H4']=fourth('C4',['C8','C5','C3a'],base)
+[?2004l[?2004h> base['H7']=fourth('C7',['C8','C6','C7a'],base)
+[?2004l[?2004h> 
+[?2004l[?2004h> for mode, yoff in [('endo anhydride (+y side)',1.25),('exo anhydride (-y side)',-1.25)]:
+[?2004l[?2004h>     p=dict(base)
+[?2004l[?2004h>     # place carbonyl carbons on selected face of the anhydride bridge
+[?2004l[?2004h>     p['C1']=add(p['C3a'],(0.0,yoff,-0.25))
+[?2004l[?2004h>     p['C3']=add(p['C7a'],(0.0,yoff, 0.25))
+[?2004l[?2004h>     p['H3a']=fourth('C3a',['C4','C7a','C1'],p)
+[?2004l[?2004h>     p['H7a']=fourth('C7a',['C7','C3a','C3'],p)
+[?2004l[?2004h>     print('\n===',mode,'===')
+[?2004l[?2004h>     core={}
+[?2004l[?2004h>     for c,prio in [
+[?2004l[?2004h>       ('C4',['C8','C3a','C5','H4']),
+[?2004l[?2004h>       ('C7',['C8','C7a','C6','H7']),
+[?2004l[?2004h>       ('C3a',['C1','C4','C7a','H3a']),
+[?2004l[?2004h>       ('C7a',['C3','C7','C3a','H7a'])]:
+[?2004l[?2004h>         t=triple(c,*prio,p); core[c]=label(t)
+[?2004l[?2004h>         print(c, core[c], 'vol=%+.4f'%t)
+[?2004l[?2004h>     # F possibilities at C8: direction toward anhydride (+x) or alkene (-x)
+[?2004l[?2004h>     for flab, xdir in [('F endo toward anhydride (+x)',1.0),('F exo toward alkene (-x)',-1.0)]:
+[?2004l[?2004h>         q=dict(p)
+[?2004l[?2004h>         # direction derived for C8 substituents: (±0.882, 0.471, 0)
+[?2004l[?2004h>         q['F']=add(q['C8'],(xdir*0.882,0.471,0))
+[?2004l[?2004h>         q['H8']=add(q['C8'],(-xdir*0.882,0.471,0))
+[?2004l[?2004h>         # C8 priorities depending on core C4/C7 descriptors
+[?2004l[?2004h>         if core['C4']=='S' and core['C7']=='R':
+[?2004l[?2004h>             pr8=['F','C7','C4','H8']
+[?2004l[?2004h>         elif core['C4']=='R' and core['C7']=='S':
+[?2004l[?2004h>             pr8=['F','C4','C7','H8']
+[?2004l[?2004h>         else:
+[?2004l[?2004h>             pr8=None
+[?2004l[?2004h>         t=triple('C8',*pr8,q) if pr8 else 0
+[?2004l[?2004h>         print(' ',flab,'C8=',label(t) if pr8 else '?','vol=%+.4f'%t)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@65b17c6365a0:/app# python3 /tmp/stereo.py
+[?2004lreference triple (positive -> S): 2
+
+=== endo anhydride (+y side) ===
+C4 S vol=+7.6438
+C7 R vol=-7.6438
+C3a S vol=+4.0266
+C7a R vol=-4.0266
+  F endo toward anhydride (+x) C8= R vol=-5.1897
+  F exo toward alkene (-x) C8= S vol=+5.1897
+
+=== exo anhydride (-y side) ===
+C4 S vol=+7.6438
+C7 R vol=-7.6438
+C3a R vol=-4.3231
+C7a S vol=+4.3231
+  F endo toward anhydride (+x) C8= R vol=-5.1897
+  F exo toward alkene (-x) C8= S vol=+5.1897
+[?2004hroot@65b17c6365a0:/app# 

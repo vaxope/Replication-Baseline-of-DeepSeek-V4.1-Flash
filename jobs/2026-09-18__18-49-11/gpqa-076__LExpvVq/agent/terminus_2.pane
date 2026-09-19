@@ -1,0 +1,12 @@
+[?2004hroot@02a68403e46d:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@02a68403e46d:/app# clear
+[?2004l[H[J[3J[?2004hroot@02a68403e46d:/app# which obabel || true; which opsin || true; python3 -c "import rdkit; print('rdkit available')" 2>/dev/null || echo no_rdkit
+[?2004lno_rdkit
+[?2004hroot@02a68403e46d:/app# ls -la /app
+[?2004ltotal 8
+drwxr-xr-x 2 root root 4096 Sep 18 21:24 [0m[01;34m.[0m
+drwxr-xr-x 1 root root 4096 Sep 19 00:17 [01;34m..[0m
+[?2004hroot@02a68403e46d:/app# echo -n "C" > /app/answer.txt
+[?2004l[?2004hroot@02a68403e46d:/app# 

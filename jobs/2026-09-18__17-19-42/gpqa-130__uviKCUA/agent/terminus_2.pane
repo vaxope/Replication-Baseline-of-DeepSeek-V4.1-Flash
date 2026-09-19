@@ -1,0 +1,855 @@
+[?2004hroot@c44c1ed1b1ca:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@c44c1ed1b1ca:/app# clear
+[?2004l[H[J[3J[?2004hroot@c44c1ed1b1ca:/app# python3 -c "import rdkit; print('rdkit', rdkit.__version__)"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'rdkit'
+[?2004hroot@c44c1ed1b1ca:/app# which obabel || true
+[?2004l[?2004hroot@c44c1ed1b1ca:/app# python3 -c "import numpy, scipy; print('numpy', numpy.__version__, 'scipy', scipy.__version__)"
+[?2004lTraceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'numpy'
+[?2004hroot@c44c1ed1b1ca:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> # approximate norbornene framework coordinates (not unique but captures topology)
+[?2004l[?2004h> C1=(-1.15,0,0)
+[?2004l[?2004h> C4=(1.15,0,0)
+[?2004l[?2004h> C7=(0,0,1.02)
+[?2004l[?2004h> C2=(-0.77,1.2,-0.887)
+[?2004l[?2004h> C3=(0.77,1.2,-0.887)
+[?2004l[?2004h> C5=(0.77,-1.2,-0.887)
+[?2004l[?2004h> C6=(-0.77,-1.2,-0.887)
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> def scale_to(a,L):
+[?2004l[?2004h>     u=unit(a); return mul(u,L)
+[?2004l[?2004h> 
+[?2004l[?2004h> # known bond unit vectors at C5 from C5 to C4 and C6
+[?2004l[?2004h> v54=unit(sub(C4,C5))
+[?2004l[?2004h> v56=unit(sub(C6,C5))
+[?2004l[?2004h> s=mul(add(v54,v56),-1)
+[?2004l[?2004h> S=unit(s)
+[?2004l[?2004h> # normal to C4-C5-C6 plane
+[?2004l[?2004h> n=unit((0,-1.366,1.848))  # from cross product below
+[?2004l[?2004h> # remaining tetrahedral directions are cos(phi)*S +/- sin(phi)*n
+[?2004l[?2004h> # where |S| = 2 cos(phi), here |s| computed below
+[?2004l[?2004h> abs_s=norm(s)
+[?2004l[?2004h> cosphi=abs_s/2.0
+[?2004l[?2004h> sinphi=math.sqrt(max(0,1-cosphi*cosphi))
+[?2004l[?2004h> l_away=add(mul(S,cosphi),mul(n,sinphi))
+[?2004l[?2004h> l_toward=add(mul(S,cosphi),mul(n,-sinphi))
+[?2004l[?2004h> # l_away points toward C7 side (away from C2/C3); l_toward points toward C2/C3
+[?2004l[?2004h> print('|s|',abs_s,'cosphi',cosphi)
+[?2004l[?2004h> print('C5 directions away/toward:',l_away,l_toward)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C7 H directions
+[?2004l[?2004h> v71=unit(sub(C1,C7)); v74=unit(sub(C4,C7))
+[?2004l[?2004h> s7=mul(add(v71,v74),-1)
+[?2004l[?2004h> S7=unit(s7)
+[?2004l[?2004h> n7=unit((0,-1,0))
+[?2004l[?2004h> abs_s7=norm(s7); c7=abs_s7/2; s7v=math.sqrt(max(0,1-c7*c7))
+[?2004l[?2004h> H7a=add(mul(S7,c7),mul(n7,s7v))
+[?2004l[?2004h> H7b=add(mul(S7,c7),mul(n7,-s7v))
+[?2004l[?2004h> print('C7 H dirs',H7a,H7b)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C2 methyl carbon direction: trigonal sp2, opposite sum of bonds to C1 and C3
+[?2004l[?2004h> u21=unit(sub(C1,C2)); u23=unit(sub(C3,C2))
+[?2004l[?2004h> d2=unit(mul(add(u21,u23),-1))
+[?2004l[?2004h> C2Me=add(C2,mul(d2,1.50))
+[?2004l[?2004h> u31=unit(sub(C4,C3)); u32=unit(sub(C2,C3))
+[?2004l[?2004h> d3=unit(mul(add(u31,u32),-1))
+[?2004l[?2004h> C3Me=add(C3,mul(d3,1.50))
+[?2004l[?2004h> print('methyl C positions',C2Me,C3Me)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate methyl hydrogens tetrahedrally around each methyl carbon.
+[?2004l[?2004h> # The Cmethyl->parent bond direction is -d; build one perpendicular and rotate.
+[?2004l[?2004h> def methyl_h_positions(Cme, parent_dir, rCH=1.09):
+[?2004l[?2004h>     # parent_dir is unit vector from parent atom to methyl carbon; H directions make tetra angle
+[?2004l[?2004h>     axis=unit(parent_dir)
+[?2004l[?2004h>     # find a unit vector perpendicular to axis
+[?2004l[?2004h>     trial=(0,0,1)
+[?2004l[?2004h>     if abs(dot(axis,trial))>0.9: trial=(0,1,0)
+[?2004l[?2004h>     perp=unit(sub(trial,mul(axis,dot(trial,axis))))
+[?2004l[?2004h>     # H directions from methyl carbon: angle with C-C bond is 109.5, so component along -axis
+[?2004l[?2004h>     comp=math.cos(math.radians(109.5))  # along axis? The H directions relative to parent bond
+[?2004l[?2004h>     # Actually angle between Cme->H and Cme->parent is 109.5. parent dir from Cme = -axis
+[?2004l[?2004h>     # Solve h = cos(theta)*(-axis) + sin(theta)*(cos psi perp + sin psi perp2)
+[?2004l[?2004h>     # theta = 109.5 relative to Cme->parent = -axis
+[?2004l[?2004h>     cos_t=math.cos(math.radians(109.5))
+[?2004l[?2004h>     sin_t=math.sin(math.radians(109.5))
+[?2004l[?2004h>     perp2=unit((axis[1]*perp[2]-axis[2]*perp[1], axis[2]*perp[0]-axis[0]*perp[2], axis[0]*perp[1]-axis[1]*perp[0]))
+[?2004l[?2004h>     hs=[]
+[?2004l[?2004h>     for k in range(3):
+[?2004l[?2004h>         psi=2*math.pi*k/3
+[?2004l[?2004h>         hdir=add(mul(mul(axis,-1),cos_t), add(mul(perp,sin_t*math.cos(psi)),mul(perp2,sin_t*math.sin(psi))))
+[?2004l[?2004h>         hs.append(add(Cme,mul(hdir,rCH)))
+[?2004l[?2004h>     return hs
+[?2004l[?2004h> 
+[?2004l[?2004h> H2= methyl_h_positions(C2Me,d2)
+[?2004l[?2004h> H3= methyl_h_positions(C3Me,d3)
+[?2004l[?2004h> 
+[?2004l[?2004h> # anhydride CH positions at C5/C6 for endo (H away) and exo (H toward)
+[?2004l[?2004h> H5_endo=add(C5,mul(l_away,1.10))
+[?2004l[?2004h> H5_exo=add(C5,mul(l_toward,1.10))
+[?2004l[?2004h> H6_endo=add(C6,mul(unit(sub(C1,C6)),1.10))  # placeholder not used
+[?2004l[?2004h> 
+[?2004l[?2004h> # C7 H positions (bond length 1.10)
+[?2004l[?2004h> H7a_p=add(C7,mul(H7a,1.10)); H7b_p=add(C7,mul(H7b,1.10))
+[?2004l[?2004h> 
+[?2004l[?2004h> def d(a,b): return norm(sub(a,b))
+[?2004l[?2004h> print('\nEndo H5 to C7-H distances:',d(H5_endo,H7a_p),d(H5_endo,H7b_p))
+[?2004l[?2004h> print('Exo  H5 to C7-H distances:',d(H5_exo,H7a_p),d(H5_exo,H7b_p))
+[?2004l[?2004h> for label,hs in [('C2Me',H2),('C3Me',H3)]:
+[?2004l[?2004h>     print('\n',label,'to H5_endo distances:',[round(d(H5_endo,h),2) for h in hs])
+[?2004l[?2004h>     print(label,'to H5_exo distances:',[round(d(H5_exo,h),2) for h in hs])
+[?2004l[?2004h> PY
+[?2004l|s| 1.2273747011254281 cosphi 0.6136873505627141
+C5 directions away/toward: (0.37661216424068344, -0.8589660654517686, 0.3469091105954758) (0.37661216424068344, 0.07967447118240056, -0.9229354806929171)
+C7 H dirs (0.0, -0.748126725128388, 0.6635558779399617) (-0.0, 0.748126725128388, 0.6635558779399617)
+methyl C positions (-1.690531025844071, 2.152388370342168, -1.5909737370779193) (1.690531025844071, 2.152388370342168, -1.5909737370779193)
+
+Endo H5 to C7-H distances: 2.8699153808479916 3.911110107692335
+Exo  H5 to C7-H distances: 3.8502463306094805 4.299536017436283
+
+ C2Me to H5_endo distances: [5.97, 5.74, 5.44]
+C2Me to H5_exo distances: [5.26, 4.57, 4.49]
+
+ C3Me to H5_endo distances: [5.0, 4.28, 5.26]
+C3Me to H5_exo distances: [4.12, 2.98, 3.95]
+[?2004hroot@c44c1ed1b1ca:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l5=add([?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> 
+[?2004l[?2004h> def tetra_dirs(u1,u2):
+[?2004l[?2004h>     # two unit bond directions to neighbors u1,u2; return two other unit tetrahedral directions
+[?2004l[?2004h>     u1=unit(u1); u2=unit(u2)
+[?2004l[?2004h>     S=unit(add(u1,u2))
+[?2004l[?2004h>     cs=dot(u1,S)
+[?2004l[?2004h>     ca=-1.0/3.0
+[?2004l[?2004h>     x=ca/cs
+[?2004l[?2004h>     if x>1: x=1.0
+[?2004l[?2004h>     if x<-1: x=-1.0
+[?2004l[?2004h>     p=unit(cross(u1,u2))
+[?2004l[?2004h>     perp=math.sqrt(max(0.0,1-x*x))
+[?2004l[?2004h>     return add(mul(S,x),mul(p,perp)), add(mul(S,x),mul(p,-perp))
+[?2004l[?2004h> 
+[?2004l[?2004h> def methyl_h_positions(Cme, parent_dir, rCH=1.09):
+[?2004l[?2004h>     axis=unit(parent_dir)
+[?2004l[?2004h>     # choose trial perpendicular
+[?2004l[?2004h>     trial=(0,0,1)
+[?2004l[?2004h>     if abs(dot(axis,trial))>0.9: trial=(0,1,0)
+[?2004l[?2004h>     perp=unit(sub(trial,mul(axis,dot(trial,axis))))
+[?2004l[?2004h>     perp2=unit(cross(axis,perp))
+[?2004l[?2004h>     cos_t=math.cos(math.radians(109.5)); sin_t=math.sin(math.radians(109.5))
+[?2004l[?2004h>     hs=[]
+[?2004l[?2004h>     for k in range(3):
+[?2004l[?2004h>         psi=2*math.pi*k/3
+[?2004l[?2004h>         hdir=add(mul(axis,-cos_t),add(mul(perp,sin_t*math.cos(psi)),mul(perp2,sin_t*math.sin(psi))))
+[?2004l[?2004h>         hs.append(add(Cme,mul(hdir,rCH)))
+[?2004l[?2004h>     return hs
+[?2004l[?2004h> 
+[?2004l[?2004h> # idealized norbornane skeleton with three bridges around C1-C4 axis
+[?2004l[?2004h> z0=1.15
+[?2004l[?2004h> C1=(0,0,z0); C4=(0,0,-z0)
+[?2004l[?2004h> C7=(1.02,0,0)
+[?2004l[?2004h> # bridge A: C2=C3 at azimuth 120 deg
+[?2004l[?2004h> zalk=1.34/2
+[?2004l[?2004h> r_alk=math.sqrt(1.54**2-(zalk-z0)**2)
+[?2004l[?2004h> th=math.radians(120)
+[?2004l[?2004h> C2=(r_alk*math.cos(th),r_alk*math.sin(th),zalk)
+[?2004l[?2004h> C3=(r_alk*math.cos(th),r_alk*math.sin(th),-zalk)
+[?2004l[?2004h> # bridge B: C5-C6 at azimuth 240 deg
+[?2004l[?2004h> zsuc=1.54/2
+[?2004l[?2004h> r_suc=math.sqrt(1.54**2-(zsuc-z0)**2)
+[?2004l[?2004h> th2=math.radians(240)
+[?2004l[?2004h> C5=(r_suc*math.cos(th2),r_suc*math.sin(th2),-zsuc)
+[?2004l[?2004h> C6=(r_suc*math.cos(th2),r_suc*math.sin(th2),zsuc)
+[?2004l[?2004h> 
+[?2004l[?2004h> names={'C1':C1,'C2':C2,'C3':C3,'C4':C4,'C5':C5,'C6':C6,'C7':C7}
+[?2004l[?2004h> for i in ['C1','C2','C3','C4','C5','C6','C7']:
+[?2004l[?2004h>   for j in ['C1','C2','C3','C4','C5','C6','C7']:
+[?2004l[?2004h>     if i<j:
+[?2004l[?2004h>       dd=norm(sub(names[i],names[j]))
+[?2004l[?2004h>       if dd<1.8: print('bond',i,j,round(dd,3))
+[?2004l[?2004h> print('C1-C4',norm(sub(C1,C4)))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C7 hydrogens: C7 bonds to C1,C4 and two H using tetra geometry
+[?2004l[?2004h> C7_dirs=tetra_dirs(sub(C1,C7),sub(C4,C7))
+[?2004l[?2004h> H7=[add(C7,mul(d,1.10)) for d in C7_dirs]
+[?2004l[?2004h> # choose H7 labels by z maybe; print
+[?2004l[?2004h> print('C7-H positions',H7)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C2 methyl carbon
+[?2004l[?2004h> mc2=unit(mul(add(unit(sub(C1,C2)),unit(sub(C3,C2))),-1))
+[?2004l[?2004h> C2Me=add(C2,mul(mc2,1.50))
+[?2004l[?2004h> # C3 methyl carbon
+[?2004l[?2004h> mc3=unit(mul(add(unit(sub(C4,C3)),unit(sub(C2,C3))),-1))
+[?2004l[?2004h> C3Me=add(C3,mul(mc3,1.50))
+[?2004l[?2004h> # C1 methyl carbon from three neighbors C2,C6,C7
+[?2004l[?2004h> mc1=unit(mul(add(add(unit(sub(C2,C1)),unit(sub(C6,C1))),unit(sub(C7,C1))),-1))
+[?2004l[?2004h> C1Me=add(C1,mul(mc1,1.50))
+[?2004l[?2004h> mc4=unit(mul(add(add(unit(sub(C3,C4)),unit(sub(C5,C4))),unit(sub(C7,C4))),-1))
+[?2004l[?2004h> C4Me=add(C4,mul(mc4,1.50))
+[?2004l[?2004h> 
+[?2004lces', [round(norm(sub(H5,h)),2) for h in H7])
+    print('H6-H7 distances', [round(norm(sub(H6,h)),2) for h in H7])
+    # methyl H positions
+    H2=methyl_h_positions(C2Me, sub(C2Me,C2))
+    H3=methyl_h_positions(C3Me, sub(C3Me,C3))
+    H1=methyl_h_positions(C1Me, sub(C1Me,C1))
+    H4=methyl_h_positions(C4Me, sub(C4Me,C4))
+    def mind(H, methyl_Hs):
+        return min(norm(sub(H,h)) for h in methyl_Hs)
+    print('min H5 to C1Me/C4Me/C2Me/C3Me:', [round(mind(H5,hs),2) for hs in [H1,H4,H2,H3]])
+    print('min H6 to C1Me/C4Me/C2Me/C3Me:', [round(mind(H6,hs),2) for hs in [H1,H4,H2,H3]])
+PY
+[?2004h> # C5 directions: neighbors C4,C6; two remaining dirs are H and C8
+[?2004l[?2004h> v54=sub(C4,C5); v56=sub(C6,C5)
+[?2004l[?2004h> d5a,d5b=tetra_dirs(v54,v56)
+[?2004l[?2004h> # C6 directions: neighbors C1,C5
+[?2004l[?2004h> v61=sub(C1,C6); v65=sub(C5,C6)
+[?2004l[?2004h> d6a,d6b=tetra_dirs(v61,v65)
+[?2004l[?2004h> 
+[?2004l[?2004h> def choose_toward(dirs, ref):
+[?2004l[?2004h>     return max(dirs, key=lambda d: dot(d,unit(sub(ref, C5 if len(dirs)==2 and False else (0,0,0)))))
+[?2004l[?2004h> # identify which C5 dirs point toward C7; both C5/C6 use their own atom as base for ref, but dot direction with ref direction enough
+[?2004l[?2004h> def closer_to(ref_atom, atom, d):
+[?2004l[?2004h>     return dot(d, unit(sub(ref_atom,atom)))
+[?2004l[?2004h> for labels, di in [('C5',d5a),('C5',d5b)]: print(labels,'dir',di,'dot to C7',closer_to(C7,C5,di))
+[?2004l[?2004h> for labels, di in [('C6',d6a),('C6',d6b)]: print(labels,'dir',di,'dot to C7',closer_to(C7,C6,di))
+[?2004l[?2004h> 
+[?2004l[?2004h> # choose C8/9 direction: endo = toward C7, exo = away. H5/H6 are the opposite direction at each.
+[?2004l[?2004h> C5_endodir = max([d5a,d5b], key=lambda d: closer_to(C7,C5,d))
+[?2004l[?2004h> C6_endodir = max([d6a,d6b], key=lambda d: closer_to(C7,C6,d))
+[?2004l[?2004h> C5_exodir = min([d5a,d5b], key=lambda d: closer_to(C7,C5,d))
+[?2004l[?2004h> C6_exodir = min([d6a,d6b], key=lambda d: closer_to(C7,C6,d))
+[?2004l[?2004h> 
+[?2004l[?2004h> for mode in ['endo','exo']:
+[?2004l[?2004h>     if mode=='endo':
+[?2004l[?2004h>         dir5=C5_endodir; dir6=C6_endodir
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         dir5=C5_exodir; dir6=C6_exodir
+[?2004l[?2004h>     H5=add(C5,mul(mul(dir5,-1),1.10))
+[?2004l[?2004h>     H6=add(C6,mul(mul(dir6,-1),1.10))
+[?2004l[?2004h>     C8=add(C5,mul(dir5,1.50))
+[?2004l[?2004h>     C9=add(C6,mul(dir6,1.50))
+[?2004l[?2004h>     print('\nMODE',mode)
+[?2004l[?2004h>     print('H5-H7 distances', [round(norm(sub(H5,h)),2) for h in H7])
+[?2004l[?2004h>     print('H6-H7 distances', [round(norm(sub(H6,h)),2) for h in H7])
+[?2004l[?2004h>     # methyl H positions
+[?2004l[?2004h>     H2=methyl_h_positions(C2Me, sub(C2Me,C2))
+[?2004l[?2004h>     H3=methyl_h_positions(C3Me, sub(C3Me,C3))
+[?2004l[?2004h>     H1=methyl_h_positions(C1Me, sub(C1Me,C1))
+[?2004l[?2004h>     H4=methyl_h_positions(C4Me, sub(C4Me,C4))
+[?2004l[?2004h>     def mind(H, methyl_Hs):
+[?2004l[?2004h>         return min(norm(sub(H,h)) for h in methyl_Hs)
+[?2004l[?2004h>     print('min H5 to C1Me/C4Me/C2Me/C3Me:', [round(mind(H5,hs),2) for hs in [H1,H4,H2,H3]])
+[?2004l[?2004h>     print('min H6 to C1Me/C4Me/C2Me/C3Me:', [round(mind(H6,hs),2) for hs in [H1,H4,H2,H3]])
+[?2004l[?2004h> PY
+[?2004lbond C1 C2 1.54
+bond C1 C6 1.54
+bond C1 C7 1.537
+bond C2 C3 1.34
+bond C3 C4 1.54
+bond C4 C5 1.54
+bond C4 C7 1.537
+bond C5 C6 1.54
+C1-C4 2.3
+C7-H positions [(1.5725784321359633, -0.9511346257697492, 0.0), (1.5725784321359633, 0.9511346257697492, 0.0)]
+C5 dir (0.5127195920639215, -0.791206362969039, -0.33333333333333337) dot to C7 -0.16106952065088648
+C5 dir (-0.9415646059990398, 0.04842501026083179, -0.33333333333333337) dot to C7 -0.8004335940387322
+C6 dir (-0.9415646059990398, 0.04842501026083179, 0.33333333333333337) dot to C7 -0.8004335940387322
+C6 dir (0.5127195920639215, -0.791206362969039, 0.33333333333333337) dot to C7 -0.16106952065088648
+
+MODE endo
+H5-H7 distances [2.96, 3.22]
+H6-H7 distances [2.96, 3.22]
+min H5 to C1Me/C4Me/C2Me/C3Me: [3.68, 2.9, 3.49, 3.01]
+min H6 to C1Me/C4Me/C2Me/C3Me: [2.9, 3.68, 3.16, 3.54]
+
+MODE exo
+H5-H7 distances [1.4, 2.66]
+H6-H7 distances [1.4, 2.66]
+min H5 to C1Me/C4Me/C2Me/C3Me: [3.44, 2.71, 4.77, 4.38]
+min H6 to C1Me/C4Me/C2Me/C3Me: [2.71, 3.44, 4.3, 4.77]
+[?2004hroot@c44c1ed1b1ca:/app# cat > /tmp/norbornene_model.py <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> 
+[?2004l[?2004h> def tetra_dirs(u1,u2):
+[?2004l[?2004h>     u1=unit(u1); u2=unit(u2)
+[?2004l[?2004h>     Sraw=add(u1,u2); M=norm(Sraw); S=unit(Sraw)
+[?2004l[?2004h>     a=-M/2.0
+[?2004l[?2004h>     b=math.sqrt(max(0.0,1.0-a*a))
+[?2004l[?2004h>     p=unit(cross(u1,u2))
+[?2004l[?2004h>     return add(mul(S,a),mul(p,b)), add(mul(S,a),mul(p,-b))
+[?2004l[?2004h> 
+[?2004l[?2004h> def methyl_h_positions(Cme, Cparent, rCH=1.09):
+[?2004l[?2004h>     axis=unit(sub(Cme,Cparent))  # Cme -> parent? use parent->Cme for geometry
+[?2004l[?2004h>     axis=unit(sub(Cme,Cparent))  # direction from parent to Cme (C-C bond direction)
+[?2004l[?2004h>     trial=(0,0,1)
+[?2004l[?2004h>     if abs(dot(axis,trial))>0.9: trial=(0,1,0)
+[?2004l[?2004h>     perp=unit(sub(trial,mul(axis,dot(trial,axis))))
+[?2004l[?2004h>     perp2=unit(cross(axis,perp))
+[?2004l[?2004h>     cos_t=math.cos(math.radians(109.5)); sin_t=math.sin(math.radians(109.5))
+[?2004l[?2004h>     hs=[]
+[?2004l[?2004h>     for k in range(3):
+[?2004l[?2004h>         psi=2*math.pi*k/3
+[?2004l[?2004h>         hdir=add(mul(axis,-cos_t),add(mul(perp,sin_t*math.cos(psi)),mul(perp2,sin_t*math.sin(psi))))
+[?2004l[?2004h>         hs.append(add(Cme,mul(hdir,rCH)))
+[?2004l[?2004h>     return hs
+[?2004l[?2004h> 
+[?2004l[?2004h> # Idealized norbornane/ene skeleton attempt
+[?2004l[?2004h> z0=1.15
+[?2004l[?2004h> C1=(0.0,0.0,z0); C4=(0.0,0.0,-z0)
+[?2004l[?2004h> C7=(1.02,0.0,0.0)
+[?2004l[?2004h> zalk=0.67; ralk=1.54
+[?2004l[?2004h> # Need C1-C2 distance 1.54: x^2+y^2+(zalk-z0)^2=1.54^2. Choose y/radius around axis
+[?2004l[?2004h> r2=math.sqrt(1.54**2-(zalk-z0)**2)
+[?2004l[?2004h> C2=(-r2*math.cos(math.radians(60)), r2*math.sin(math.radians(60)), zalk)
+[?2004l[?2004h> C3=(-r2*math.cos(math.radians(60)), r2*math.sin(math.radians(60)), -zalk)
+[?2004l[?2004h> zsuc=0.77; rsuc=math.sqrt(1.54**2-(zsuc-z0)**2)
+[?2004l[?2004h> C5=(-rsuc*math.cos(math.radians(60)), -rsuc*math.sin(math.radians(60)), -zsuc)
+[?2004l[?2004h> C6=(-rsuc*math.cos(math.radians(60)), -rsuc*math.sin(math.radians(60)), zsuc)
+[?2004l[?2004h> 
+[?2004l[?2004h> for i,j in [('C1','C2'),('C1','C6'),('C1','C7'),('C2','C3'),('C3','C4'),('C4','C5'),('C4','C7'),('C5','C6')]:
+[?2004l[?2004h>     d=norm(sub({'C1':C1,'C2':C2,'C3':C3,'C4':C4,'C5':C5,'C6':C6,'C7':C7}[i], {'C1':C1,'C2':C2,'C3':C3,'C4':C4,'C5':C5,'C6':C6,'C7':C7}[j]))
+[?2004l[?2004h>     print('bond',i,j,round(d,3))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C7 hydrogens from bonds to C1,C4
+[?2004l[?2004h> h7d=tetra_dirs(sub(C1,C7),sub(C4,C7))
+[?2004l[?2004h> H7=[add(C7,mul(d,1.10)) for d in h7d]
+[?2004l[?2004h> print('H7 positions',H7)
+[?2004l[?2004h> 
+[?2004l[?2004h> # C5 directions
+[?2004l[?2004h> d5=tetra_dirs(sub(C4,C5),sub(C6,C5))
+[?2004l[?2004h> # C6 directions
+[?2004l[?2004h> d6=tetra_dirs(sub(C1,C6),sub(C5,C6))
+[?2004l[?2004h> print('C5 dirs',d5)
+[?2004l[?2004h> print('C6 dirs',d6)
+[?2004l[?2004h> 
+[?2004l[?2004h> # methyl carbons on C2,C3,C1,C4 (bond ~1.50)
+[?2004l[?2004h> mc2=unit(mul(add(unit(sub(C1,C2)),unit(sub(C3,C2))),-1))
+[?2004l[?2004h> C2Me=add(C2,mul(mc2,1.50))
+[?2004l[?2004h> mc3=unit(mul(add(unit(sub(C4,C3)),unit(sub(C2,C3))),-1))
+[?2004l[?2004h> C3Me=add(C3,mul(mc3,1.50))
+[?2004l[?2004h> mc1=unit(mul(add(add(unit(sub(C2,C1)),unit(sub(C6,C1))),unit(sub(C7,C1))),-1))
+[?2004l[?2004h> C1Me=add(C1,mul(mc1,1.50))
+[?2004l[?2004h> mc4=unit(mul(add(add(unit(sub(C3,C4)),unit(sub(C5,C4))),unit(sub(C7,C4))),-1))
+[?2004l[?2004h> C4Me=add(C4,mul(mc4,1.50))
+[?2004l[?2004h> 
+[?2004l[?2004h> for label,Cme,Cparent in [('C1Me',C1Me,C1),('C2Me',C2Me,C2),('C3Me',C3Me,C3),('C4Me',C4Me,C4)]:
+[?2004l[?2004h>     hs=methyl_h_positions(Cme,Cparent)
+[?2004l[?2004h>     # store later in globals? build dict below
+[?2004l[?2004h>     globals()[label+'_H']=hs
+[?2004l[?2004h> 
+[?2004l[?2004h> def mind(H,hs): return min(norm(sub(H,h)) for h in hs)
+[?2004l[?2004h> def dd(a,b): return norm(sub(a,b))
+[?2004l[?2004h> 
+[?2004l[?2004h> # Try all cis combinations for C8,C9 directions and print geometry
+[?2004l[?2004h> for ia,da in enumerate(d5):
+[?2004l[?2004h>   for ib,db in enumerate(d6):
+[?2004l[?2004h>     C8=add(C5,mul(da,1.50))
+[?2004l[?2004h>     C9=add(C6,mul(db,1.50))
+[?2004l[?2004h>     H5=add(C5,mul(mul(da,-1),1.10))
+[?2004l[?2004h>     H6=add(C6,mul(mul(db,-1),1.10))
+[?2004l[?2004h>     print('\ncombo C5dir%d C6dir%d C8-C9 dist %.2f'%(ia,ib,dd(C8,C9)))
+[?2004l[?2004h>     print(' H5-H7', [round(dd(H5,h),2) for h in H7])
+[?2004l[?2004h>     print(' H6-H7', [round(dd(H6,h),2) for h in H7])
+[?2004l[?2004h>     print(' H5-methyl mins C1,C4,C2,C3', [round(mind(H5,globals()[x+'_H']),2) for x in ['C1Me','C4Me','C2Me','C3Me']])
+[?2004l[?2004h>     print(' H6-methyl mins C1,C4,C2,C3', [round(mind(H6,globals()[x+'_H']),2) for x in ['C1Me','C4Me','C2Me','C3Me']])
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@c44c1ed1b1ca:/app# python3 /tmp/norbornene_model.py
+[?2004lbond C1 C2 1.54
+bond C1 C6 1.54
+bond C1 C7 1.537
+bond C2 C3 1.34
+bond C3 C4 1.54
+bond C4 C5 1.54
+bond C4 C7 1.537
+bond C5 C6 1.54
+H7 positions [(1.749911465733958, -0.8229393976412268, 0.0), (1.749911465733958, 0.8229393976412268, 0.0)]
+C5 dirs ((0.4414938729633129, -0.8143942487006279, -0.37662337662337664), (-0.9260330445523424, -0.024852214748904977, -0.37662337662337664))
+C6 dirs ((-0.9260330445523424, -0.024852214748904977, 0.37662337662337664), (0.4414938729633129, -0.8143942487006279, 0.37662337662337664))
+
+combo C5dir0 C6dir0 C8-C9 dist 3.57
+ H5-H7 [3.03, 3.24]
+ H6-H7 [1.58, 2.58]
+ H5-methyl mins C1,C4,C2,C3 [3.61, 2.92, 3.47, 3.04]
+ H6-methyl mins C1,C4,C2,C3 [2.73, 3.38, 4.26, 4.68]
+
+combo C5dir0 C6dir1 C8-C9 dist 2.67
+ H5-H7 [3.03, 3.24]
+ H6-H7 [3.03, 3.24]
+ H5-methyl mins C1,C4,C2,C3 [3.61, 2.92, 3.47, 3.04]
+ H6-methyl mins C1,C4,C2,C3 [2.92, 3.61, 3.18, 3.51]
+
+combo C5dir1 C6dir0 C8-C9 dist 2.67
+ H5-H7 [1.58, 2.58]
+ H6-H7 [1.58, 2.58]
+ H5-methyl mins C1,C4,C2,C3 [3.38, 2.73, 4.67, 4.34]
+ H6-methyl mins C1,C4,C2,C3 [2.73, 3.38, 4.26, 4.68]
+
+combo C5dir1 C6dir1 C8-C9 dist 3.57
+ H5-H7 [1.58, 2.58]
+ H6-H7 [3.03, 3.24]
+ H5-methyl mins C1,C4,C2,C3 [3.38, 2.73, 4.67, 4.34]
+ H6-methyl mins C1,C4,C2,C3 [2.92, 3.61, 3.18, 3.51]
+[?2004hroot@c44c1ed1b1ca:/app# cat > /tmp/opt_norbornane.py <<'PY'
+[?2004l[?2004h> import math, random
+[?2004l[?2004h> 
+[?2004l[?2004h> # Atom indices: 0 C1, 1 C4, 2 C7, 3 C2, 4 C3, 5 C6, 6 C5
+[?2004l[?2004h> # Connectivity: C1-C2, C2-C3, C3-C4, C4-C5, C5-C6, C6-C1, C1-C7, C4-C7
+[?2004l[?2004h> bonds=[(0,3),(3,4),(4,1),(1,6),(6,5),(5,0),(0,2),(1,2)]
+[?2004l[?2004h> # heavy-atom angles: each sp3 carbon has 3 angles; C7 also two H but heavy angle only C1-C7-C4
+[?2004l[?2004h> angles=[]
+[?2004l[?2004h> for center, nbrs in [(0,[3,5,2]),(1,[4,6,2]),(3,[0,4]),(4,[3,1]),(5,[6,0]),(6,[1,5]),(2,[0,1])]:
+[?2004l[?2004h>     for i in range(len(nbrs)):
+[?2004l[?2004h>         for j in range(i+1,len(nbrs)):
+[?2004l[?2004h>             angles.append((nbrs[i],center,nbrs[j]))
+[?2004l[?2004h> 
+[?2004l[?2004h> r0=1.54
+[?2004l[?2004h> th0=math.radians(109.47)
+[?2004l[?2004h> kb=200.0
+[?2004l[?2004h> ka=1.0
+[?2004l[?2004h> 
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> 
+[?2004l[?2004h> def energy(x):
+[?2004l[?2004h>     coords=[tuple(x[3*i:3*i+3]) for i in range(7)]
+[?2004l[?2004h>     E=0.0
+[?2004l[?2004h>     for i,j in bonds:
+[?2004l[?2004h>         d=norm(sub(coords[i],coords[j]))
+[?2004l[?2004h>         E += kb*(d-r0)**2
+[?2004l[?2004h>     for a,b,c in angles:
+[?2004l[?2004h>         u=sub(coords[a],coords[b]); v=sub(coords[c],coords[b])
+[?2004l[?2004h>         cosang=dot(u,v)/(norm(u)*norm(v))
+[?2004l[?2004h>         cosang=max(-1,min(1,cosang))
+[?2004l[?2004h>         th=math.acos(cosang)
+[?2004l[?2004h>         E += ka*(th-th0)**2
+[?2004l[?2004h>     return E
+[?2004l[?2004h> 
+[?2004l[?2004h> # initial guess
+[?2004l[?2004h> coords=[
+[?2004l[?2004h>  (0.0,0.0,1.15),   # C1
+[?2004l[?2004h>  (0.0,0.0,-1.15),  # C4
+[?2004l[?2004h>  (1.25,0.0,0.0),   # C7
+[?2004l[?2004h>  (-0.75,0.95,0.95),# C2
+[?2004l[?2004h>  (-0.75,0.95,-0.95),# C3
+[?2004l[?2004h>  (-0.75,-0.95,0.95),# C6
+[?2004l[?2004h>  (-0.75,-0.95,-0.95) # C5
+[?2004l[?2004h> ]
+[?2004l[?2004h> x=[v for c in coords for v in c]
+[?2004l[?2004h> h=1e-4
+[?2004l[?2004h> lr=0.005
+[?2004l[?2004h> best=energy(x); bestx=x[:]
+[?2004l[?2004h> print('start E',best)
+[?2004l[?2004h> for it in range(20000):
+[?2004l[?2004h>     # finite-diff gradient
+[?2004l[?2004h>     g=[0.0]*len(x)
+[?2004l[?2004h>     for i in range(len(x)):
+[?2004l[?2004h>         xp=x[:]; xm=x[:]
+[?2004l[?2004h>         xp[i]+=h; xm[i]-=h
+[?2004l[?2004h>         g[i]=(energy(xp)-energy(xm))/(2*h)
+[?2004l[?2004h>     gn=math.sqrt(sum(v*v for v in g))
+[?2004l[?2004h>     if gn<1e-7:
+[?2004l[?2004h>         break
+[?2004l[?2004h>     # line search
+[?2004l[?2004h>     step=lr
+[?2004l[?2004h>     improved=False
+[?2004l[?2004h>     for _ in range(30):
+[?2004l[?2004h>         xt=[x[i]-step*g[i] for i in range(len(x))]
+[?2004l[?2004h>         et=energy(xt)
+[?2004l[?2004h>         if et<best:
+[?2004l[?2004h>             x=xt; best=et; bestx=x[:]
+[?2004l[?2004h>             improved=True
+[?2004l[?2004h>             lr=min(0.02, lr*1.05)
+[?2004l[?2004h>             break
+[?2004l[?2004h>         step*=0.5
+[?2004l[?2004h>     if not improved:
+[?2004l[?2004h>         lr*=0.5
+[?2004l[?2004h>         if lr<1e-8:
+[?2004l[?2004h>             break
+[?2004l[?2004h>     if it%2000==0:
+[?2004l[?2004h>         print(it, best, 'gn',gn,'lr',lr)
+[?2004l[?2004h> 
+[?2004l[?2004h> print('final E',best,'lr',lr)
+[?2004l[?2004h> coords=[bestx[3*i:3*i+3] for i in range(7)]
+[?2004l[?2004h> for i,c in enumerate(coords): print(i, tuple(round(v,3) for v in c))
+[?2004l[?2004h> for i,j in bonds:
+[?2004l[?2004h>     d=norm(sub(coords[i],coords[j])); print('bond',i,j,round(d,3))
+[?2004l[?2004h> # print selected angles
+[?2004l[?2004h> for a,b,c in angles:
+[?2004l[?2004h>     u=sub(coords[a],coords[b]); v=sub(coords[c],coords[b])
+[?2004l[?2004h>     ang=math.degrees(math.acos(max(-1,min(1,dot(u,v)/(norm(u)*norm(v))))))
+[?2004l[?2004h>     print('angle',a,b,c,round(ang,1))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@c44c1ed1b1ca:/app# python3 /tmp/opt_norbornane.py
+[?2004lstart E 140.71764182114973
+0 6.457496489241918 gn 508.1518660284015 lr 0.00525
+final E 0.18787387924370802 lr 9.5367431640625e-09
+0 (0.096, -0.0, 1.143)
+1 (0.096, -0.0, -1.143)
+2 (1.128, -0.0, -0.0)
+3 (-0.768, 1.219, 0.77)
+4 (-0.768, 1.219, -0.77)
+5 (-0.768, -1.219, 0.77)
+6 (-0.768, -1.219, -0.77)
+bond 0 3 1.54
+bond 3 4 1.54
+bond 4 1 1.54
+bond 1 6 1.54
+bond 6 5 1.54
+bond 5 0 1.54
+bond 0 2 1.54
+bond 1 2 1.54
+angle 3 0 5 104.7
+angle 3 0 2 101.3
+angle 5 0 2 101.3
+angle 4 1 6 104.7
+angle 4 1 2 101.3
+angle 6 1 2 101.3
+angle 0 3 4 104.0
+angle 3 4 1 104.0
+angle 6 5 0 104.0
+angle 1 6 5 104.0
+angle 0 2 1 95.9
+[?2004hroot@c44c1ed1b1ca:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> # optimized norbornane heavy atoms
+[?2004l[?2004h> C1=(0.096,0.0,1.143)
+[?2004l[?2004h> C4=(0.096,0.0,-1.143)
+[?2004l[?2004h> C7=(1.128,0.0,0.0)
+[?2004l[?2004h> C2=(-0.768,1.219,0.77)
+[?2004l[?2004h> C3=(-0.768,1.219,-0.77)
+[?2004l[?2004h> C6=(-0.768,-1.219,0.77)
+[?2004l[?2004h> C5=(-0.768,-1.219,-0.77)
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> 
+[?2004l[?2004h> def tetra_dirs(u1,u2):
+[?2004l[?2004h>     u1=unit(u1); u2=unit(u2)
+[?2004l[?2004h>     S=unit(add(u1,u2)); cs=dot(u1,S); ca=-1/3
+[?2004l[?2004h>     x=ca/cs
+[?2004l[?2004h>     p=unit(cross(u1,u2)); q=math.sqrt(max(0,1-x*x))
+[?2004l[?2004h>     return add(mul(S,x),mul(p,q)), add(mul(S,x),mul(p,-q))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C7 hydrogens
+[?2004l[?2004h> h7dirs=tetra_dirs(sub(C1,C7),sub(C4,C7))
+[?2004l[?2004h> H7=[add(C7,mul(d,1.10)) for d in h7dirs]
+[?2004l[?2004h> print('H7',H7)
+[?2004l[?2004h> for atom,base,nbrs,ref in [('C5',C5,(C4,C6),C7),('C6',C6,(C1,C5),C7)]:
+[?2004l[?2004h>     ds=tetra_dirs(sub(nbrs[0],base),sub(nbrs[1],base))
+[?2004l[?2004h>     refdir=unit(sub(ref,base))
+[?2004l[?2004h>     print('\n',atom,'dirs:')
+[?2004l[?2004h>     for i,d in enumerate(ds):
+[?2004l[?2004h>         # H is opposite d if d is anhydride carbon direction
+[?2004l[?2004h>         H=add(base,mul(mul(d,-1),1.10))
+[?2004l[?2004h>         Ccarbonyl=add(base,mul(d,1.50))
+[?2004l[?2004h>         print(' dir',i,'dot toward C7',round(dot(d,refdir),3),'Ccarbonyl-C7 dist',round(norm(sub(Ccarbonyl,ref)),2),'H-H7',[round(norm(sub(H,h)),2) for h in H7])
+[?2004l[?2004h> 
+[?2004l[?2004h> # methyl H approximations
+[?2004l[?2004h> # bridgehead C1/C4 methyl C directions opposite sum of three heavy bonds
+[?2004l[?2004h> for label,C in [('C1',C1),('C4',C4)]:
+[?2004l[?2004h>     nbrs = [C2,C6,C7] if label=='C1' else [C3,C5,C7]
+[?2004l[?2004h>     v=unit(mul(add(add(unit(sub(nbrs[0],C)),unit(sub(nbrs[1],C))),unit(sub(nbrs[2],C))),-1))
+[?2004l[?2004h>     Cme=add(C,mul(v,1.50))
+[?2004l[?2004h>     # approximate methyl H positions from arbitrary perpendicular frame
+[?2004l[?2004h>     axis=unit(sub(Cme,C))
+[?2004l[?2004h>     trial=(0,0,1) if abs(dot(axis,(0,0,1)))<0.9 else (0,1,0)
+[?2004l[?2004h>     p=unit(sub(trial,mul(axis,dot(trial,axis))))
+[?2004l[?2004h>     q=unit(cross(axis,p))
+[?2004l[?2004h>     ct=math.cos(math.radians(109.5)); st=math.sin(math.radians(109.5))
+[?2004l[?2004h>     hs=[]
+[?2004l[?2004h>     for k in range(3):
+[?2004l[?2004h>         psi=2*math.pi*k/3
+[?2004l[?2004h>         hd=add(mul(axis,-ct),add(mul(p,st*math.cos(psi)),mul(q,st*math.sin(psi))))
+[?2004l[?2004h>         hs.append(add(Cme,mul(hd,1.09)))
+[?2004l[?2004h>     print('\n',label,'methyl H positions',hs)
+[?2004l[?2004h> 
+[?2004l[?2004h> # alkene C2/C3 methyl carbons: sp2 carbon with bonds to C1 (or C4), other alkene C, and methyl
+[?2004l[?2004h> for label,C,base in [('C2',C2,C1),('C3',C3,C4)]:
+[?2004l[?2004h>     other = C3 if label=='C2' else C2
+[?2004l[?2004h>     v=unit(mul(add(unit(sub(base,C)),unit(sub(other,C))),-1))
+[?2004l[?2004h>     Cme=add(C,mul(v,1.50))
+[?2004l[?2004h>     axis=unit(sub(Cme,C))
+[?2004l[?2004h>     trial=(0,0,1) if abs(dot(axis,(0,0,1)))<0.9 else (0,1,0)
+[?2004l[?2004h>     p=unit(sub(trial,mul(axis,dot(trial,axis))))
+[?2004l[?2004h>     q=unit(cross(axis,p))
+[?2004l[?2004h>     ct=math.cos(math.radians(109.5)); st=math.sin(math.radians(109.5))
+[?2004l[?2004h>     hs=[]
+[?2004l[?2004h>     for k in range(3):
+[?2004l[?2004h>         psi=2*math.pi*k/3
+[?2004l[?2004h>         hd=add(mul(axis,-ct),add(mul(p,st*math.cos(psi)),mul(q,st*math.sin(psi))))
+[?2004l[?2004h>         hs.append(add(Cme,mul(hd,1.09)))
+[?2004l[?2004h>     print('\n',label,'methyl H positions',hs)
+[?2004l[?2004h> PY
+[?2004lH7 [(1.6751429723029405, -0.954271747386196, 0.0), (1.6751429723029405, 0.954271747386196, 0.0)]
+
+ C5 dirs:
+ dir 0 dot toward C7 -0.185 Ccarbonyl-C7 dist 3.04 H-H7 [3.03, 3.21]
+ dir 1 dot toward C7 -0.78 Ccarbonyl-C7 dist 3.67 H-H7 [1.53, 2.75]
+
+ C6 dirs:
+ dir 0 dot toward C7 -0.78 Ccarbonyl-C7 dist 3.67 H-H7 [1.53, 2.75]
+ dir 1 dot toward C7 -0.185 Ccarbonyl-C7 dist 3.04 H-H7 [3.03, 3.21]
+
+ C1 methyl H positions [(0.7403574351643565, 1.0274792252904745, 2.8919249174962687), (-0.09459937357658221, -0.5137396126452369, 3.199548545229548), (1.575314243905295, -0.5137396126452377, 2.58430128976299)]
+
+ C4 methyl H positions [(0.7403574351643565, 1.0274792252904745, -2.8919249174962687), (1.5753142439052952, -0.5137396126452369, -2.58430128976299), (-0.09459937357658177, -0.5137396126452377, -3.1995485452295473)]
+
+ C2 methyl H positions [(-1.2516805261940598, 1.90141500165574, 2.7270414772789735), (-1.074303348715271, 3.1899547190820092, 1.5124043262189422), (-2.5262338585099804, 2.1608587712045457, 1.5124043262189415)]
+
+ C3 methyl H positions [(-1.9831312960854812, 2.9334039929724565, -1.107525275865598), (-0.7085779637695605, 2.6739602234236513, -2.3221624269256296), (-2.1605084735642697, 1.644864275546187, -2.32216242692563)]
+[?2004hroot@c44c1ed1b1ca:/app# cat > /tmp/opt_norbornene.py <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> 
+[?2004l[?2004h> # atoms: C1=0, C4=1, C7=2, C2=3, C3=4, C6=5, C5=6
+[?2004l[?2004h> bonds=[(0,3,1.54),(3,4,1.34),(4,1,1.54),(1,6,1.54),(6,5,1.54),(5,0,1.54),(0,2,1.54),(1,2,1.54)]
+[?2004l[?2004h> angles=[]
+[?2004l[?2004h> # sp3 centers
+[?2004l[?2004h> for center,nbrs in [(0,[3,5,2]),(1,[4,6,2]),(5,[6,0]),(6,[1,5]),(2,[0,1])]:
+[?2004l[?2004h>     for i in range(len(nbrs)):
+[?2004l[?2004h>         for j in range(i+1,len(nbrs)):
+[?2004l[?2004h>             angles.append((nbrs[i],center,nbrs[j],109.47))
+[?2004l[?2004h> # sp2 alkene carbons
+[?2004l[?2004h> angles += [(0,3,4,120.0),(3,4,1,120.0)]
+[?2004l[?2004h> # planarity restraint atoms 0-3-4-1
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> 
+[?2004l[?2004h> def torsion_angle(a,b,c,d):
+[?2004l[?2004h>     b1=sub(b,a); b2=sub(c,b); b3=sub(d,c)
+[?2004l[?2004h>     n1=cross(b1,b2); n2=cross(b2,b3)
+[?2004l[?2004h>     m1=cross(n1,unit(b2))
+[?2004l[?2004h>     x=dot(n1,n2); y=dot(m1,n2)
+[?2004l[?2004h>     return math.atan2(y,x)
+[?2004l[?2004h> 
+[?2004l[?2004h> def energy(x):
+[?2004l[?2004h>     coords=[tuple(x[3*i:3*i+3]) for i in range(7)]
+[?2004l[?2004h>     E=0.0
+[?2004l[?2004h>     for i,j,r0 in bonds:
+[?2004l[?2004h>         d=norm(sub(coords[i],coords[j]))
+[?2004l[?2004h>         E += 300.0*(d-r0)**2
+[?2004l[?2004h>     for a,b,c,th0 in angles:
+[?2004l[?2004h>         u=sub(coords[a],coords[b]); v=sub(coords[c],coords[b])
+[?2004l[?2004h>         cs=max(-1,min(1,dot(u,v)/(norm(u)*norm(v))))
+[?2004l[?2004h>         th=math.acos(cs)
+[?2004l[?2004h>         E += 50.0*(th-math.radians(th0))**2
+[?2004l[?2004h>     # alkene planarity C1-C2-C3-C4: want dihedral near 0 or pi
+[?2004l[?2004h>     tor=torsion_angle(coords[0],coords[3],coords[4],coords[1])
+[?2004l[?2004h>     E += 100.0*(math.sin(tor))**2
+[?2004l[?2004h>     return E
+[?2004l[?2004h> 
+[?2004l[?2004h> coords=[
+[?2004l[?2004h>  (0.096,0.0,1.143),
+[?2004l[?2004h>  (0.096,0.0,-1.143),
+[?2004l[?2004h>  (1.128,0.0,0.0),
+[?2004l[?2004h>  (-0.768,1.219,0.77),
+[?2004l[?2004h>  (-0.768,1.219,-0.77),
+[?2004l[?2004h>  (-0.768,-1.219,0.77),
+[?2004l[?2004h>  (-0.768,-1.219,-0.77)
+[?2004l[?2004h> ]
+[?2004l[?2004h> x=[v for c in coords for v in c]
+[?2004l[?2004h> h=1e-4; lr=0.002; best=energy(x)
+[?2004l[?2004h> for it in range(50000):
+[?2004l[?2004h>     g=[]
+[?2004l[?2004h>     for i in range(len(x)):
+[?2004l[?2004h>         xp=x[:]; xm=x[:]
+[?2004l[?2004h>         xp[i]+=h; xm[i]-=h
+[?2004l[?2004h>         g.append((energy(xp)-energy(xm))/(2*h))
+[?2004l[?2004h>     gn=math.sqrt(sum(v*v for v in g))
+[?2004l[?2004h>     if gn<1e-8: break
+[?2004l[?2004h>     improved=False
+[?2004l[?2004h>     step=lr
+[?2004l[?2004h>     for _ in range(30):
+[?2004l[?2004h>         xt=[x[i]-step*g[i] for i in range(len(x))]
+[?2004l[?2004h>         et=energy(xt)
+[?2004l[?2004h>         if et<best:
+[?2004l[?2004h>             x=xt; best=et; improved=True; lr=min(0.01,lr*1.1); break
+[?2004l[?2004h>         step*=0.5
+[?2004l[?2004h>     if not improved:
+[?2004l[?2004h>         lr*=0.5
+[?2004l[?2004h>         if lr<1e-9: break
+[?2004l[?2004h> print('best E',best)
+[?2004l[?2004h> coords=[x[3*i:3*i+3] for i in range(7)]
+[?2004l[?2004h> for i,c in enumerate(coords): print(i,tuple(round(v,3) for v in c))
+[?2004l[?2004h> for i,j,r0 in bonds:
+[?2004l[?2004h>     print('bond',i,j,round(norm(sub(coords[i],coords[j])),3))
+[?2004l[?2004h> print('alkene torr',math.degrees(torsion_angle(coords[0],coords[3],coords[4],coords[1])))
+[?2004l[?2004h> for a,b,c,th0 in angles:
+[?2004l[?2004h>     u=sub(coords[a],coords[b]); v=sub(coords[c],coords[b])
+[?2004l[?2004h>     th=math.degrees(math.acos(max(-1,min(1,dot(u,v)/(norm(u)*norm(v))))))
+[?2004l[?2004h>     print('angle',a,b,c,round(th,1))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@c44c1ed1b1ca:/app# python3 /tmp/opt_norbornene.py
+[?2004lbest E 15.151048540621257
+0 (0.091, 0.017, 1.141)
+1 (0.091, 0.017, -1.141)
+2 (1.119, -0.018, -0.0)
+3 (-0.764, 1.206, 0.668)
+4 (-0.764, 1.206, -0.668)
+5 (-0.762, -1.214, 0.774)
+6 (-0.762, -1.214, -0.774)
+bond 0 3 1.539
+bond 3 4 1.337
+bond 4 1 1.539
+bond 1 6 1.542
+bond 6 5 1.548
+bond 5 0 1.542
+bond 0 2 1.536
+bond 1 2 1.536
+alkene torr 6.139303371176892e-08
+angle 3 0 5 103.7
+angle 3 0 2 99.3
+angle 5 0 2 100.1
+angle 4 1 6 103.7
+angle 4 1 2 99.3
+angle 6 1 2 100.1
+angle 6 5 0 103.8
+angle 1 6 5 103.8
+angle 0 2 1 95.9
+angle 0 3 4 107.9
+angle 3 4 1 107.9
+[?2004hroot@c44c1ed1b1ca:/app# python3 - <<'PY'
+[?2004l[?2004h> import math
+[?2004l[?2004h> # optimized norbornene coordinates
+[?2004l[?2004h> C1=(0.091,0.017,1.141)
+[?2004l[?2004h> C4=(0.091,0.017,-1.141)
+[?2004l[?2004h> C7=(1.119,-0.018,0.0)
+[?2004l[?2004h> C2=(-0.764,1.206,0.668)
+[?2004l[?2004h> C3=(-0.764,1.206,-0.668)
+[?2004l[?2004h> C6=(-0.762,-1.214,0.774)
+[?2004l[?2004h> C5=(-0.762,-1.214,-0.774)
+[?2004l[?2004h> 
+[?2004l[?2004h> def sub(a,b): return tuple(a[i]-b[i] for i in range(3))
+[?2004l[?2004h> def add(a,b): return tuple(a[i]+b[i] for i in range(3))
+[?2004l[?2004h> def mul(a,s): return tuple(a[i]*s for i in range(3))
+[?2004l[?2004h> def dot(a,b): return sum(a[i]*b[i] for i in range(3))
+[?2004l[?2004h> def cross(a,b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+[?2004l[?2004h> def norm(a): return math.sqrt(dot(a,a))
+[?2004l[?2004h> def unit(a):
+[?2004l[?2004h>     n=norm(a); return tuple(x/n for x in a)
+[?2004l[?2004h> def dist(a,b): return norm(sub(a,b))
+[?2004l[?2004h> 
+[?2004l[?2004h> def tetra_dirs(u1,u2):
+[?2004l[?2004h>     u1=unit(u1); u2=unit(u2)
+[?2004l[?2004h>     S=unit(add(u1,u2)); cs=dot(u1,S); ca=-1/3
+[?2004l[?2004h>     x=ca/cs
+[?2004l[?2004h>     x=max(-1,min(1,x))
+[?2004l[?2004h>     p=unit(cross(u1,u2)); q=math.sqrt(max(0,1-x*x))
+[?2004l[?2004h>     return add(mul(S,x),mul(p,q)), add(mul(S,x),mul(p,-q))
+[?2004l[?2004h> 
+[?2004l[?2004h> # C7 hydrogens
+[?2004l[?2004h> h7d=tetra_dirs(sub(C1,C7),sub(C4,C7))
+[?2004l[?2004h> H7=[add(C7,mul(d,1.09)) for d in h7d]
+[?2004l[?2004h> # C5/C6 extra bond directions
+[?2004l[?2004h> d5=tetra_dirs(sub(C4,C5),sub(C6,C5))
+[?2004l[?2004h> d6=tetra_dirs(sub(C1,C6),sub(C5,C6))
+[?2004l[?2004h> # identify endo directions as those with larger dot toward C7
+[?2004l[?2004h> refC5=unit(sub(C7,C5)); refC6=unit(sub(C7,C6))
+[?2004l[?2004h> d5=sorted(d5,key=lambda d: dot(d,refC5),reverse=True)
+[?2004l[?2004h> d6=sorted(d6,key=lambda d: dot(d,refC6),reverse=True)
+[?2004l[?2004h> # d[0]=toward C7 (endo substituent), d[1]=away (exo)
+[?2004l[?2004h> print('d5 endo/exo',d5)
+[?2004l[?2004h> print('d6 endo/exo',d6)
+[?2004l[?2004h> 
+[?2004l[?2004h> # methyl carbon positions
+[?2004l[?2004h> me2=add(C2,mul(unit(mul(add(unit(sub(C1,C2)),unit(sub(C3,C2))),-1)),1.50))
+[?2004l[?2004h> me3=add(C3,mul(unit(mul(add(unit(sub(C4,C3)),unit(sub(C2,C3))),-1)),1.50))
+[?2004l[?2004h> me1=add(C1,mul(unit(mul(add(add(unit(sub(C2,C1)),unit(sub(C6,C1))),unit(sub(C7,C1))),-1)),1.50))
+[?2004l[?2004h> me4=add(C4,mul(unit(mul(add(add(unit(sub(C3,C4)),unit(sub(C5,C4))),unit(sub(C7,C4))),-1)),1.50))
+[?2004l[?2004h> 
+[?2004l[?2004h> # approximate methyl H positions on a tetrahedral methyl (one arbitrary rotamer is enough for contact scan)
+[?2004l[?2004h> def methyl_hs(Cme, Cparent):
+[?2004l[?2004h>     axis=unit(sub(Cme,Cparent))
+[?2004l[?2004h>     trial=(0,0,1) if abs(dot(axis,(0,0,1)))<0.9 else (0,1,0)
+[?2004l[?2004h>     p=unit(sub(trial,mul(axis,dot(trial,axis))))
+[?2004l[?2004h>     q=unit(cross(axis,p))
+[?2004l[?2004h>     ct=math.cos(math.radians(109.5)); st=math.sin(math.radians(109.5))
+[?2004l[?2004h>     hs=[]
+[?2004l[?2004h>     for k in range(3):
+[?2004l[?2004h>         psi=2*math.pi*k/3
+[?2004l[?2004h>         hd=add(mul(axis,-ct),add(mul(p,st*math.cos(psi)),mul(q,st*math.sin(psi))))
+[?2004l[?2004h>         hs.append(add(Cme,mul(hd,1.09)))
+[?2004l[?2004h>     return hs
+[?2004l[?2004h> METH={'C1Me':methyl_hs(me1,C1),'C2Me':methyl_hs(me2,C2),'C3Me':methyl_hs(me3,C3),'C4Me':methyl_hs(me4,C4)}
+[?2004l[?2004h> 
+[?2004l[?2004h> for mode in ['endo-carbonyls','exo-carbonyls']:
+[?2004l[?2004h>     if mode=='endo-carbonyls':
+[?2004l[?2004h>         n5=d5[0]; n6=d6[0]  # substituent endo
+[?2004l[?2004h>     else:
+[?2004l[?2004h>         n5=d5[1]; n6=d6[1]  # H endo; carbonyl exo
+[?2004l[?2004h>     C8=add(C5,mul(n5,1.50)); C9=add(C6,mul(n6,1.50))
+[?2004l[?2004h>     H5=add(C5,mul(mul(n5,-1),1.09)); H6=add(C6,mul(mul(n6,-1),1.09))
+[?2004l[?2004h>     print('\n---',mode,'---')
+[?2004l[?2004h>     print('C8-C9 distance',round(dist(C8,C9),2),'H5-H7',[round(dist(H5,h),2) for h in H7],'H6-H7',[round(dist(H6,h),2) for h in H7])
+[?2004l[?2004h>     for hname,H in [('H5',H5),('H6',H6)]:
+[?2004l[?2004h>         vals={}
+[?2004l[?2004h>         for mname,hs in METH.items():
+[?2004l[?2004h>             vals[mname]=round(min(dist(H,h) for h in hs),2)
+[?2004l[?2004h>         print(hname,'closest methyl-H distances',vals)
+[?2004l[?2004h>     # Also check H to methyl carbons
+[?2004l[?2004h>     for hname,H in [('H5',H5),('H6',H6)]:
+[?2004l[?2004h>         print(hname,'to methyl C distances', {n:round(dist(H,c),2) for n,c in [('C1Me',me1),('C2Me',me2),('C3Me',me3),('C4Me',me4)]})
+[?2004l[?2004h> PY
+[?2004ld5 endo/exo [(0.44979897962342924, -0.8285950559945499, -0.33333333333333326), (-0.9337846349080396, 0.13013510094723996, -0.33333333333333326)]
+d6 endo/exo [(0.44979897962342924, -0.8285950559945499, 0.33333333333333326), (-0.9337846349080396, 0.13013510094723996, 0.33333333333333326)]
+
+--- endo-carbonyls ---
+C8-C9 distance 2.55 H5-H7 [2.99, 3.21] H6-H7 [2.99, 3.21]
+H5 closest methyl-H distances {'C1Me': 3.79, 'C2Me': 3.29, 'C3Me': 2.81, 'C4Me': 3.01}
+H6 closest methyl-H distances {'C1Me': 3.01, 'C2Me': 2.94, 'C3Me': 3.39, 'C4Me': 3.79}
+H5 to methyl C distances {'C1Me': 3.51, 'C2Me': 3.19, 'C3Me': 2.76, 'C4Me': 2.85}
+H6 to methyl C distances {'C1Me': 2.85, 'C2Me': 2.76, 'C3Me': 3.19, 'C4Me': 3.51}
+
+--- exo-carbonyls ---
+C8-C9 distance 2.55 H5-H7 [1.48, 2.71] H6-H7 [1.48, 2.71]
+H5 closest methyl-H distances {'C1Me': 3.43, 'C2Me': 4.72, 'C3Me': 4.27, 'C4Me': 2.73}
+H6 closest methyl-H distances {'C1Me': 2.73, 'C2Me': 4.24, 'C3Me': 4.67, 'C4Me': 3.43}
+H5 to methyl C distances {'C1Me': 3.31, 'C2Me': 4.41, 'C3Me': 4.11, 'C4Me': 2.6}
+H6 to methyl C distances {'C1Me': 2.6, 'C2Me': 4.11, 'C3Me': 4.41, 'C4Me': 3.31}
+[?2004hroot@c44c1ed1b1ca:/app# 
